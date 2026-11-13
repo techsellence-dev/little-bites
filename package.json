@@ -1,0 +1,8 @@
+{
+  "name": "little-bites",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Daily weaning menu app with natural-language customisation",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=22.13" }
+}

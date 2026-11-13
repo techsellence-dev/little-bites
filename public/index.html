@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f07a28">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Little Bites: daily weaning menu</title>
+<style>
+:root{--bg:#fff7ef;--card:#fff;--ink:#3a2e2a;--mute:#8a7a72;--brand:#f07a28;--brand-d:#c85c12;--line:#f3e1d0;--soft:#fff0e2;--green:#4f9565;--r:16px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali","Noto Sans Devanagari",sans-serif;padding-bottom:84px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:linear-gradient(135deg,#ff9a4d,#f07a28);color:#fff;position:sticky;top:0;z-index:5}
+.brand{font-weight:800;font-size:1.2rem;display:flex;gap:10px;align-items:center;letter-spacing:.2px}
+.brand img{width:34px;height:34px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.who{display:flex;gap:8px;align-items:center;font-size:.9rem}
+.ghost{background:rgba(255,255,255,.22);border:0;color:#fff;border-radius:999px;padding:6px 12px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.layout>*{min-width:0}
+.layout{max-width:1100px;margin:0 auto;padding:16px;display:grid;gap:16px;grid-template-columns:1fr 400px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.stage{background:var(--soft);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:12px}
+.stage b{display:block}.stage span{color:var(--mute);font-size:.9rem}
+.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+.days button{flex:1;min-width:50px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 4px;text-align:center}
+.days button small{display:block;color:var(--mute);font-size:.7rem}
+.days button.on{background:var(--brand);color:#fff;border-color:var(--brand)}.days button.on small{color:#ffe9dd}
+.weeks{scroll-snap-type:x proximity}.weeks button{min-width:104px;scroll-snap-align:center}.weeks button.on{background:var(--ink);color:#fff;border-color:var(--ink)}.weeks button.on small{color:#ddd}
+.agebar{display:flex;align-items:center;gap:8px;margin-bottom:4px}.agebar select{flex:1;max-width:280px}.weeks button small.rep{color:var(--brand);font-weight:600}.weeks button.on small.rep{color:#ffd9bf}.agehint{color:var(--mute);font-size:.78rem;margin-bottom:10px}
+.gro-range{font-weight:600;margin:2px 0 8px}.gro-group{margin:12px 0 4px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.gro-item{display:flex;gap:10px;align-items:flex-start;margin:0;padding:7px 0;border-bottom:1px solid var(--line);color:var(--ink);font-size:.95rem}
+.gro-item input{margin-top:3px}.gro-item small{display:block;color:var(--mute);font-size:.78rem}.gro-item .n{margin-left:auto;color:var(--mute);font-size:.8rem;white-space:nowrap}
+.gro-item.done span.t{text-decoration:line-through;color:var(--mute)}.gro-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.secondary{border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 14px;font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-bottom:10px;background:#fff}
+.seg button{border:0;background:none;padding:6px 14px}.seg button.on{background:var(--ink);color:#fff}
+.meal{display:flex;gap:12px;margin-bottom:0}
+.meal .time{width:62px;flex:none;color:var(--mute);font-size:.8rem;padding-top:2px}
+.meal .time b{display:block;color:var(--ink);font-size:.95rem;text-transform:capitalize}
+.meal .body{flex:1}
+.meal h3{margin:0;font-size:1.05rem}
+.bn{color:var(--brand-d);font-size:.95rem;margin-bottom:2px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.chip{font-size:.72rem;background:var(--soft);border-radius:999px;padding:2px 8px;color:var(--brand-d)}
+.chip.lock{background:#e5f2e9;color:var(--green)}.chip.man{background:#e9eefb;color:#4b62a8}
+.tip{font-size:.88rem;color:var(--mute)}
+.acts{display:flex;gap:8px;margin-top:6px}
+.link{background:none;border:0;color:var(--brand-d);padding:2px 0;font-size:.85rem}
+.skipped{color:var(--mute);font-style:italic}
+.milk{font-size:.85rem;color:var(--mute);text-align:center;margin-top:8px}
+.weekwrap{overflow-x:auto}
+table.week{border-collapse:collapse;min-width:720px;width:100%;font-size:.82rem;background:#fff}
+table.week th,table.week td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+table.week th{background:var(--soft)}table.week td{cursor:pointer}table.week td.lk{background:#f1f8f3}
+table.week th.today{background:var(--brand);color:#fff}
+h2{margin:0 0 6px;font-size:1.05rem}
+textarea{width:100%;min-height:84px;border:1px solid var(--line);border-radius:12px;padding:10px;resize:vertical;background:#fffdfb}
+.primary{background:var(--brand);color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:600;width:100%;margin-top:8px}
+.primary:disabled{opacity:.6}
+.secondary{background:#fff;color:var(--brand-d);border:1px solid var(--brand);border-radius:12px;padding:9px 16px;font-weight:600;width:100%;margin-top:8px}
+.ex{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.ex button{border:1px dashed var(--brand);background:none;color:var(--brand-d);border-radius:999px;padding:4px 10px;font-size:.8rem}
+.reply{margin-top:10px;padding:10px;border-radius:12px;background:var(--soft);font-size:.92rem}
+.reply.warn{background:#fff3d9}
+.rules{list-style:none;margin:0;padding:0}
+.rules li{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.rules li:last-child{border:0}
+.rules small{display:block;color:var(--mute)}
+.rules button{border:0;background:none;color:var(--mute);font-size:1.2rem;line-height:1}
+.empty{color:var(--mute);font-size:.9rem}
+.sug{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem;margin:0;color:var(--ink)}
+.sug input{margin-top:4px}
+.sug .cw{color:#a15a00;font-size:.82rem}
+.note{font-size:.75rem;color:var(--mute);max-width:1100px;margin:0 auto;padding:0 16px 16px}
+.tabbar{display:none}
+dialog{border:0;border-radius:20px;padding:20px;max-width:420px;width:calc(100% - 24px);background:#fff;color:var(--ink)}
+dialog::backdrop{background:rgba(58,46,42,.45)}
+label{display:block;font-size:.88rem;margin:10px 0 4px;color:var(--mute)}
+input[type=text],input[type=date],input[type=email],input[type=password],select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px;background:#fffdfb}
+.checks{display:flex;flex-wrap:wrap;gap:6px 14px}.checks label{display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)}
+.err{color:#b3261e;font-size:.88rem;margin-top:8px;min-height:1em}
+@media(max-width:899px){
+  .layout{grid-template-columns:1fr}
+  body[data-tab=menu] #customPane,body[data-tab=menu] #groceryPane,body[data-tab=custom] #groceryPane{display:none}
+  body[data-tab=custom] #menuPane,body[data-tab=grocery] #menuPane,body[data-tab=grocery] #customPane{display:none}
+  .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:6}
+  .tabbar button{flex:1;border:0;background:none;padding:14px 0;font-weight:600;color:var(--mute)}
+  .tabbar button.on{color:var(--brand-d);box-shadow:inset 0 3px 0 var(--brand)}
+}
+@media(min-width:900px){#customPane{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto}body{padding-bottom:24px}}
+</style>
+</head>
+<body data-tab="menu">
+<header class="top">
+  <div class="brand"><img src="icon.svg" alt="">Little Bites</div>
+  <div class="who"><span id="who"></span><button class="ghost" id="acctBtn">Sign in</button><button class="ghost" id="settingsBtn">Baby</button></div>
+</header>
+
+<main class="layout">
+  <section id="menuPane">
+    <div class="stage" id="stage"></div>
+    <div class="agebar"><label for="ageSel">Baby's age</label><select id="ageSel"></select><button type="button" id="ageUp" class="link">+1 month</button></div>
+    <div class="agehint">The menu rebuilds for the chosen age and moves up on its own as months pass. Pick "Automatic" to follow the date of birth.</div>
+    <div class="seg" id="viewSeg"><button data-v="day" class="on">Day</button><button data-v="week">Week</button></div>
+    <nav class="days weeks" id="weeks"></nav>
+    <nav class="days" id="days"></nav>
+    <div id="menu"></div>
+  </section>
+
+  <aside id="customPane">
+    <div class="card">
+      <h2>Customise the menu</h2>
+      <div class="tip">Tell me in your own words: English, বাংলা or हिन्दी.</div>
+      <textarea id="ask" placeholder="e.g. No dairy for now. Ragi twice a week. Only fruit on Sundays. সপ্তাহে তিনদিন মাছ দিন। रविवार को सिर्फ फल।"></textarea>
+      <div class="ex" id="examples"></div>
+      <button class="primary" id="go">Update menu</button>
+      <div id="reply"></div>
+    </div>
+
+    <div class="card">
+      <h2>Add guidance from a post</h2>
+      <div class="tip">Paste an influencer's caption (any language) or upload a screenshot. I'll pull out the feeding advice and you choose what to apply.</div>
+      <label for="postSource">Who posted it? (optional)</label>
+      <input type="text" id="postSource" maxlength="60" placeholder="@handle or page name">
+      <label for="postText">Post text</label>
+      <textarea id="postText" placeholder="Paste caption here…"></textarea>
+      <label for="postImg">or screenshot</label>
+      <input type="file" id="postImg" accept="image/*">
+      <button class="secondary" id="readPost">Read post</button>
+      <div id="postResult"></div>
+    </div>
+
+    <div class="card">
+      <h2>Your rules</h2>
+      <ul class="rules" id="rules"></ul>
+      <button class="link" id="resetAll">Reset to default menu</button>
+    </div>
+
+    <div class="card" id="postsCard" style="display:none">
+      <h2>Saved guidance</h2>
+      <ul class="rules" id="posts"></ul>
+    </div>
+  </aside>
+  <section id="groceryPane">
+    <div class="card">
+      <h2>Grocery list</h2>
+      <div class="tip">Everything on the menu for the weeks you pick, grouped by aisle. It starts from the week selected above.</div>
+      <div class="seg" id="groSeg"><button data-gro="1" class="on">Weekly</button><button data-gro="2">Every 2 weeks</button><button data-gro="4">Monthly</button></div>
+      <div class="gro-range" id="groRange"></div>
+      <div id="groList"></div>
+      <div class="gro-acts"><button type="button" class="secondary" id="groCopy">Copy list</button><button type="button" class="secondary" id="groSave">Download .txt</button><button type="button" class="link" id="groClear">Clear ticks</button></div>
+      <div class="tip" id="groMsg" role="status"></div>
+    </div>
+  </section>
+</main>
+
+<p class="note">General guidance, not medical advice. Influencer advice is not vetted by Little Bites: check with your paediatrician before introducing allergens, or if your baby has a medical condition. No added salt or sugar, no honey before 12 months, no whole nuts. Milk feeds continue alongside solids.</p>
+
+<nav class="tabbar">
+  <button data-tab="menu" class="on">Menu</button>
+  <button data-tab="grocery">Grocery</button>
+  <button data-tab="custom">Customise</button>
+</nav>
+
+<dialog id="setup">
+  <form method="dialog" id="setupForm">
+    <h2>About your baby</h2>
+    <div class="tip">Used to pick age-appropriate foods.</div>
+    <label for="bName">Name (optional)</label><input type="text" id="bName" maxlength="30">
+    <label for="bDob">Date of birth</label><input type="date" id="bDob" required>
+    <label for="bDiet">Family food preference</label>
+    <select id="bDiet"><option value="veg">Vegetarian</option><option value="egg">Vegetarian + eggs</option><option value="nonveg">Non-vegetarian (fish &amp; chicken)</option></select>
+    <label>Known allergies (always excluded)</label>
+    <div class="checks" id="bAllergies"></div>
+    <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="bBn"> Show Bengali names (বাংলা)</label></div>
+    <button class="primary" type="submit">Save &amp; show menu</button>
+  </form>
+</dialog>
+
+<dialog id="account">
+  <div id="acctOut">
+    <h2>Sync across devices</h2>
+    <div class="tip">Sign in on any phone or computer to see the same baby profile, rules and saved guidance.</div>
+    <form id="authForm">
+      <label for="aEmail">Email</label><input type="email" id="aEmail" autocomplete="email" required>
+      <label for="aPw">Password (8+ characters)</label><input type="password" id="aPw" autocomplete="current-password" minlength="8" required>
+      <div class="err" id="aErr"></div>
+      <button class="primary" type="submit" id="aLogin">Log in</button>
+      <button class="secondary" type="button" id="aSignup">Create account</button>
+    </form>
+    <button class="link" id="aForgot" style="margin-top:10px;display:block">Forgot password?</button>
+    <button class="link" id="aGuest" style="margin-top:4px">Continue without an account (this device only)</button>
+  </div>
+  <div id="acctForgot" style="display:none">
+    <h2>Reset your password</h2>
+    <div class="tip">Enter your account email. If it matches an account, we'll send a link that works for 1 hour.</div>
+    <form id="forgotForm">
+      <label for="fEmail">Email</label><input type="email" id="fEmail" autocomplete="email" required>
+      <div class="err" id="fMsg"></div>
+      <button class="primary" type="submit">Send reset link</button>
+    </form>
+    <button class="link" data-acct="out" style="margin-top:8px">Back to log in</button>
+  </div>
+  <div id="acctReset" style="display:none">
+    <h2>Choose a new password</h2>
+    <form id="resetForm">
+      <label for="rPw">New password (8+ characters)</label><input type="password" id="rPw" autocomplete="new-password" minlength="8" required>
+      <div class="err" id="rMsg"></div>
+      <button class="primary" type="submit">Save new password</button>
+    </form>
+  </div>
+  <div id="acctIn" style="display:none">
+    <h2>Account</h2>
+    <div class="tip" id="aWho"></div>
+    <div class="tip" id="aVerified" style="margin-top:4px"></div>
+    <div class="tip" id="syncState" style="margin:6px 0 12px"></div>
+    <details style="margin-bottom:10px"><summary class="link" style="cursor:pointer">Change password</summary>
+      <form id="pwForm">
+        <label for="pCur">Current password</label><input type="password" id="pCur" autocomplete="current-password" required>
+        <label for="pNew">New password (8+ characters)</label><input type="password" id="pNew" autocomplete="new-password" minlength="8" required>
+        <div class="err" id="pMsg"></div>
+        <button class="primary" type="submit">Update password</button>
+      </form>
+    </details>
+    <button class="secondary" id="aOut">Sign out</button>
+    <button class="link" id="aDel" style="margin-top:12px;color:#b3261e">Delete account and synced data</button>
+    <button class="link" id="aClose" style="display:block;margin-top:8px">Close</button>
+  </div>
+</dialog>
+
+<script src="store.js"></script>
+<script src="foods.js"></script>
+<script src="engine.js"></script>
+<script src="grocery.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
