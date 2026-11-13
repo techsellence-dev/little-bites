@@ -37,3 +37,4 @@ Put it behind Caddy/nginx or a platform like Render, Fly.io or Railway for HTTPS
 ## Layout
 - `public/foods.js` dish catalogue · `public/engine.js` weekly planner and rule engine · `public/app.js` UI and sync
 - `server.js` static files, auth, password service, sync, `/api/parse`, `/api/guidance` · `db.js` SQLite storage · `mail.js` email · `public/store.js` IndexedDB
+# little-bites
