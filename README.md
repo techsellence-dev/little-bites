@@ -1,3 +1,14 @@
+---
+title: Little Bites
+emoji: 🍚
+colorFrom: yellow
+colorTo: red
+sdk: gradio
+sdk_version: 5.9.1
+app_file: app.py
+pinned: false
+---
+
 # Little Bites
 
 Daily weaning menu for babies 6 months+ with Bengali home-style dishes. Installable web app (PWA) for desktop and mobile, with accounts and cross-device sync.
