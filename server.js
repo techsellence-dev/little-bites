@@ -17,7 +17,7 @@ try { // tiny .env loader
 } catch (_) {}
 
 const PORT = process.env.PORT || 3000;
-const MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash'; // needs vision + multilingual
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite'; // needs vision + multilingual
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const PUBLIC = path.join(__dirname, 'public');
 const TRUST_PROXY = process.env.TRUST_PROXY === '1';
