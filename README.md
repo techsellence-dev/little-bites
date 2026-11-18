@@ -10,7 +10,7 @@ The demo is the static frontend only. Menus, grocery lists and swaps work and ar
 - **Age-aware**: pick the baby's age (6, 7, 8, 9–11, 12+ months), or follow the date of birth and let the menu advance on its own. The menu rebuilds whenever the age changes.
 - **Grocery list**: built from the menu for one week, two weeks or a month, grouped by aisle, with copy, download and tick-off.
 - **Swaps and rules**: swap any meal, or customise in plain language (English, বাংলা, हिन्दी): "no dairy", "ragi twice a week", "only fruit on Sundays".
-- **Influencer posts**: paste a caption or upload a screenshot; feeding advice is turned into suggested rules the mother can accept. Unsafe advice (honey, salt/sugar, whole nuts, cow's milk as a drink before 12 months, detox diets…) is shown as a caution and never becomes a rule. Requires the server and an LLM API key.
+- **Influencer posts**: paste a caption or upload a screenshot; feeding advice is turned into suggested rules the mother can accept. Unsafe advice (honey, salt/sugar, whole nuts, cow's milk as a drink before 12 months, detox diets…) is shown as a caution and never becomes a rule. Requires the server and a Gemini API key.
 - **Accounts and sync** (server only): email and password, local-first, last-write-wins sync across devices, email verification, password reset, account deletion.
 - **Offline**: data lives in IndexedDB on the device, so the app works without a connection.
 
@@ -20,7 +20,7 @@ Requires Node 22.13+. No `npm install` needed.
 cp .env.example .env
 node server.js          # http://localhost:3000
 ```
-Without an API key the menu, grocery list, accounts and sync still work; only the AI features are unavailable. Without `RESEND_API_KEY`, verification and reset emails are printed to the server log.
+Without `GEMINI_API_KEY` the menu, grocery list, accounts and sync still work; only the AI features are unavailable. Without `RESEND_API_KEY`, verification and reset emails are printed to the server log.
 
 ## Deployment
 Two targets, both automatic on every push to `main`:
@@ -46,7 +46,7 @@ The role ARN is stored in the repository variable `AWS_DEPLOY_ROLE_ARN`. If the 
 To deploy by hand: run the `Deploy to EC2` workflow from the Actions tab.
 
 ### Other hosts
-Any host with Node and HTTPS works. A `Dockerfile` is included. Set `TRUST_PROXY=1`, `APP_URL`, `MAIL_FROM`, `RESEND_API_KEY`, and mount a persistent disk at `DATA_DIR`. Run a single instance: sessions, rate limits and SQLite are per server. See `.env.example`.
+Any host with Node and HTTPS works. A `Dockerfile` is included. Set `TRUST_PROXY=1`, `APP_URL`, `MAIL_FROM`, `RESEND_API_KEY`, `GEMINI_API_KEY` (optional `GEMINI_MODEL`), and mount a persistent disk at `DATA_DIR`. Run a single instance: sessions, rate limits and SQLite are per server. See `.env.example`.
 
 ## Project layout
 - `public/` frontend: `foods.js` dish catalogue · `engine.js` weekly planner and rule engine · `grocery.js` grocery list · `app.js` UI and sync · `store.js` IndexedDB · `sw.js` service worker

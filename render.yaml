@@ -9,5 +9,5 @@ services:
     envVars:
       - key: TRUST_PROXY
         value: "1"
-      - key: ANTHROPIC_API_KEY   # will be replaced by the Gemini key later
+      - key: GEMINI_API_KEY
         sync: false

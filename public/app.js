@@ -124,14 +124,14 @@
     return out;
   }
 
-  // ---------- instruction parsing: Claude via server, simple offline fallback ----------
+  // ---------- instruction parsing: Gemini via server, simple offline fallback ----------
   function vocab() {
     const s = (k) => [...new Set(FOODS.flatMap(k))].sort();
     return { ingredients: s((f) => f.ing), categories: s((f) => [f.cat]), nutrients: s((f) => f.nut), allergens: s((f) => f.a), dishes: FOODS.map((f) => f.n) };
   }
   async function parseInstruction(text) {
     const r = await api('/api/parse', { method: 'POST', body: JSON.stringify({ text, vocab: vocab(), rules: state.rules.map((x) => ({ id: x.id, summary: describe(x) })) }) });
-    if (r.ok) return { ...r.json, source: 'claude' };
+    if (r.ok) return { ...r.json, source: 'ai' };
     if (r.status === 429) return { add: [], reply: 'Too many requests this hour. Please try again later.', source: 'limit' };
     return { ...localParse(text), source: 'offline' };
   }
@@ -206,7 +206,7 @@
     const r = await api('/api/guidance', { method: 'POST', body: JSON.stringify({ text, image, vocab: vocab(), context: { ageMonths: current ? current.age : 6, allergies: (state.profile && state.profile.allergies) || [] } }) });
     btn.disabled = false; btn.textContent = 'Read post';
     if (!r.ok) {
-      const m = r.status === 503 ? 'Reading posts needs the Claude connection, which is not set up on this server.' : r.status === 429 ? 'Too many requests this hour. Please try again later.' : (r.json && r.json.error === 'upstream' && (r.json.detail === 401 || r.json.detail === 403)) ? 'Reading posts is unavailable: the server\'s Claude API key was rejected. The site owner needs to update ANTHROPIC_API_KEY.' : 'Could not read the post. Please try again.';
+      const m = r.status === 503 ? 'Reading posts needs the AI connection, which is not set up on this server.' : r.status === 429 ? 'Too many requests this hour. Please try again later.' : (r.json && r.json.error === 'upstream' && (r.json.detail === 401 || r.json.detail === 403)) ? 'Reading posts is unavailable: the server\'s Gemini API key was rejected. The site owner needs to update GEMINI_API_KEY.' : 'Could not read the post. Please try again.';
       $('postResult').innerHTML = `<div class="reply warn">${esc(m)}</div>`; return;
     }
     const g = r.json;
