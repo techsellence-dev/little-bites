@@ -17,7 +17,7 @@ try { // tiny .env loader
 } catch (_) {}
 
 const PORT = process.env.PORT || 3000;
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'; // needs vision + multilingual
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash'; // needs vision + multilingual
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const PUBLIC = path.join(__dirname, 'public');
 const TRUST_PROXY = process.env.TRUST_PROXY === '1';
@@ -125,7 +125,7 @@ async function callGemini(system, content, maxTokens = 1200) {
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: 'user', parts }],
-      // thinking tokens count towards the limit on 2.5 models, so leave headroom
+      // thinking tokens can count towards the limit, so leave headroom
       generationConfig: { maxOutputTokens: maxTokens * 4, temperature: 0.2, responseMimeType: 'application/json' },
     }),
   });
