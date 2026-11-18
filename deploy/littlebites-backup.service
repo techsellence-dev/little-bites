@@ -1,0 +1,9 @@
+[Unit]
+Description=Little Bites nightly database backup to S3
+
+[Service]
+Type=oneshot
+User=littlebites
+Group=littlebites
+PrivateTmp=true
+ExecStart=/opt/little-bites/deploy/backup.sh littlebites-backups-970547354647
