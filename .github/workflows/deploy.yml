@@ -3,7 +3,6 @@ name: Deploy to EC2
 on:
   push:
     branches: [main]
-    paths-ignore: ['README.md', 'deploy/littlebites-backup.*']
   workflow_dispatch:
 
 permissions:

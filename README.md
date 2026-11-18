@@ -22,19 +22,35 @@ node server.js          # http://localhost:3000
 ```
 Without an API key the menu, grocery list, accounts and sync still work; only the AI features are unavailable. Without `RESEND_API_KEY`, verification and reset emails are printed to the server log.
 
-## Deploy
-- **Static (GitHub Pages)**: every push to `main` publishes `public/` through `.github/workflows/pages.yml`.
-- **Full app**: any host that runs Node and terminates HTTPS. A `Dockerfile` is included.
-  ```
-  docker build -t little-bites .
-  docker run -p 3000:3000 -v lb-data:/data little-bites
-  ```
-  Set `TRUST_PROXY=1`, `APP_URL` (your public https address), `MAIL_FROM` and `RESEND_API_KEY`, and mount a persistent disk at `DATA_DIR` (it holds `littlebites.sqlite`). Run a single instance: sessions, rate limits and SQLite are per server.
+## Deployment
+Two targets, both automatic on every push to `main`:
 
-See `.env.example` for all settings.
+- **Static demo (GitHub Pages):** `.github/workflows/pages.yml` publishes `public/` to https://techsellence-dev.github.io/little-bites/.
+- **Full app (AWS EC2):** `.github/workflows/deploy.yml` deploys to https://littlebites.techsellence.in.
+
+### How the AWS deploy works
+1. GitHub Actions signs in to AWS with OIDC (no stored keys). The IAM role `little-bites-deploy` can only be assumed from this repo's `main` branch.
+2. The role may only run the SSM document `littlebites-deploy` on one instance. That document runs `deploy/deploy.sh`: `git pull --ff-only` in `/opt/little-bites`, restart the service, check that the app responds.
+3. The workflow then checks the public URL. A failed step fails the run. There is no automatic rollback: revert the commit and push.
+
+The role ARN is stored in the repository variable `AWS_DEPLOY_ROLE_ARN`. If the repository is renamed or recreated, update the role's trust policy.
+
+### Server layout (us-east-2)
+- One EC2 instance, shared with another app. Amazon Linux 2023, 1 GB swap added.
+- nginx terminates HTTPS (Let's Encrypt via certbot, auto-renewed) and proxies to the app on `127.0.0.1:3000`. DNS is a Route 53 A record.
+- Node 22 in `/opt/node22`, app in `/opt/little-bites`, run by systemd (`deploy/littlebites.service`) as the unprivileged user `littlebites` with a 220 MB memory cap and first priority to be killed under memory pressure.
+- Settings in `/etc/littlebites.env` (see `deploy/littlebites.env.example`); never commit secrets.
+- SQLite database in `/var/lib/littlebites`. A systemd timer (`deploy/littlebites-backup.timer`) copies it nightly to a private S3 bucket with 30-day expiry.
+- No SSH: administer the host with AWS Systems Manager (SSM) Run Command.
+
+To deploy by hand: run the `Deploy to EC2` workflow from the Actions tab.
+
+### Other hosts
+Any host with Node and HTTPS works. A `Dockerfile` is included. Set `TRUST_PROXY=1`, `APP_URL`, `MAIL_FROM`, `RESEND_API_KEY`, and mount a persistent disk at `DATA_DIR`. Run a single instance: sessions, rate limits and SQLite are per server. See `.env.example`.
 
 ## Project layout
 - `public/` frontend: `foods.js` dish catalogue · `engine.js` weekly planner and rule engine · `grocery.js` grocery list · `app.js` UI and sync · `store.js` IndexedDB · `sw.js` service worker
+- `deploy/` systemd units, nginx config, deploy and backup scripts · `.github/workflows/` Pages and EC2 deploys
 - `server.js` static files, auth, sync and AI endpoints · `db.js` SQLite storage (the only file that touches storage) · `mail.js` email
 
 ## Before real users
