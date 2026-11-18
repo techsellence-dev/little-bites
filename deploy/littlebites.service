@@ -1,0 +1,23 @@
+[Unit]
+Description=Little Bites
+After=network.target
+
+[Service]
+User=littlebites
+Group=littlebites
+WorkingDirectory=/opt/little-bites
+EnvironmentFile=/etc/littlebites.env
+ExecStart=/opt/node22/bin/node --max-old-space-size=160 server.js
+Restart=always
+RestartSec=3
+# Shares a small host with another app: cap memory and be the first one the kernel kills.
+MemoryMax=220M
+OOMScoreAdjust=500
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/littlebites
+
+[Install]
+WantedBy=multi-user.target

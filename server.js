@@ -297,4 +297,4 @@ http.createServer(async (req, res) => {
     fs.readFile(file, (err, data) => err ? send(404, 'Not found', 'text/plain')
       : send(200, data, MIME[path.extname(file)] || 'application/octet-stream'));
   } catch (e) { send(e.status || 500, { error: e.message === 'too_large' || e.message === 'bad_json' ? e.message : 'server' }); }
-}).listen(PORT, () => console.log(`Little Bites on http://localhost:${PORT} | Claude: ${process.env.ANTHROPIC_API_KEY ? 'on' : 'OFF (no ANTHROPIC_API_KEY)'} | data: ${DATA_DIR}`));
+}).listen(PORT, process.env.HOST || undefined, () => console.log(`Little Bites on http://localhost:${PORT} | Claude: ${process.env.ANTHROPIC_API_KEY ? 'on' : 'OFF (no ANTHROPIC_API_KEY)'} | data: ${DATA_DIR}`));
