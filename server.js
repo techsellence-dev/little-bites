@@ -119,16 +119,30 @@ async function callGemini(system, content, maxTokens = 1200) {
   const parts = (Array.isArray(content) ? content : [{ type: 'text', text: content }]).map((c) =>
     c.type === 'image' ? { inlineData: { mimeType: c.source.media_type, data: c.source.data } } : { text: c.text });
   const base = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
-  const r = await fetch(`${base}/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: 'user', parts }],
-      // thinking tokens can count towards the limit, so leave headroom
-      generationConfig: { maxOutputTokens: maxTokens * 4, temperature: 0.2, responseMimeType: 'application/json' },
-    }),
+  const reqBody = JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: 'user', parts }],
+    // thinking tokens can count towards the limit, so leave headroom
+    generationConfig: { maxOutputTokens: maxTokens * 4, temperature: 0.2, responseMimeType: 'application/json' },
   });
+  let r;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      r = await fetch(`${base}/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+        body: reqBody,
+        signal: AbortSignal.timeout(30000),
+      });
+    } catch (e) {
+      console.error(`[gemini] attempt ${attempt} failed: ${e.name}`);
+      r = null;
+    }
+    if (r && r.status !== 429 && r.status < 500) break;
+    if (r) console.error(`[gemini] attempt ${attempt} got ${r.status}`);
+    if (attempt < 2) await new Promise((ok) => setTimeout(ok, 1500));
+  }
+  if (!r) return { status: 504, json: { error: 'timeout' } };
   if (!r.ok) {
     const body = await r.json().catch(() => ({}));
     console.error(`[gemini] upstream ${r.status}: ${(body.error && (body.error.status + ': ' + body.error.message)) || 'no detail'}`);
