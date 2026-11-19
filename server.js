@@ -32,8 +32,8 @@ store.purge();
 setInterval(() => store.purge(), 3600e3).unref();
 const mail = require('./mail');
 const APP_URL = (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
-if (!process.env.RESEND_API_KEY && process.env.MAIL_PROVIDER !== 'resend')
-  console.warn('[mail] no RESEND_API_KEY: password-reset and verification emails are only printed to this log (dev mode)');
+if (!process.env.RESEND_API_KEY && !['resend', 'ses'].includes(process.env.MAIL_PROVIDER))
+  console.warn('[mail] no mail provider configured: password-reset and verification emails are only printed to this log (dev mode)');
 const sendMail = (to, tpl) => mail.send({ to, ...tpl }).catch((e) => console.error('[mail] failed:', e.message));
 const TOKEN_TTL = { reset: 3600e3, verify: 24 * 3600e3 };
 function issueToken(userId, kind) {

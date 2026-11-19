@@ -20,7 +20,7 @@ Requires Node 22.13+. No `npm install` needed.
 cp .env.example .env
 node server.js          # http://localhost:3000
 ```
-Without `GEMINI_API_KEY` the menu, grocery list, accounts and sync still work; only the AI features are unavailable. Without `RESEND_API_KEY`, verification and reset emails are printed to the server log.
+Without `GEMINI_API_KEY` the menu, grocery list, accounts and sync still work; only the AI features are unavailable. Without a mail provider, verification and reset emails are printed to the server log.
 
 ## Deployment
 Two targets, both automatic on every push to `main`:
@@ -40,13 +40,14 @@ The role ARN is stored in the repository variable `AWS_DEPLOY_ROLE_ARN`. If the 
 - nginx terminates HTTPS (Let's Encrypt via certbot, auto-renewed) and proxies to the app on `127.0.0.1:3000`. DNS is a Route 53 A record.
 - Node 22 in `/opt/node22`, app in `/opt/little-bites`, run by systemd (`deploy/littlebites.service`) as the unprivileged user `littlebites` with a 220 MB memory cap and first priority to be killed under memory pressure.
 - Settings in `/etc/littlebites.env` (see `deploy/littlebites.env.example`); never commit secrets.
+- Email (verification, password reset) goes through Amazon SES from `noreply@techsellence.in`. The domain is verified with DKIM records in Route 53, and the app signs requests with the instance role (`mail.js`, no keys stored). The SES account starts in sandbox: until AWS grants production access it can only deliver to addresses verified in SES.
 - SQLite database in `/var/lib/littlebites`. A systemd timer (`deploy/littlebites-backup.timer`) copies it nightly to a private S3 bucket with 30-day expiry.
 - No SSH: administer the host with AWS Systems Manager (SSM) Run Command.
 
 To deploy by hand: run the `Deploy to EC2` workflow from the Actions tab.
 
 ### Other hosts
-Any host with Node and HTTPS works. A `Dockerfile` is included. Set `TRUST_PROXY=1`, `APP_URL`, `MAIL_FROM`, `RESEND_API_KEY`, `GEMINI_API_KEY` (optional `GEMINI_MODEL`), and mount a persistent disk at `DATA_DIR`. Run a single instance: sessions, rate limits and SQLite are per server. See `.env.example`.
+Any host with Node and HTTPS works. A `Dockerfile` is included. Set `TRUST_PROXY=1`, `APP_URL`, `MAIL_FROM`, `MAIL_PROVIDER` (`ses`, `resend` or console), `RESEND_API_KEY` if using Resend, `GEMINI_API_KEY` (optional `GEMINI_MODEL`), and mount a persistent disk at `DATA_DIR`. Run a single instance: sessions, rate limits and SQLite are per server. See `.env.example`.
 
 ## Project layout
 - `public/` frontend: `foods.js` dish catalogue · `engine.js` weekly planner and rule engine · `grocery.js` grocery list · `app.js` UI and sync · `store.js` IndexedDB · `sw.js` service worker
