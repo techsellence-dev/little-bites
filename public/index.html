@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2f7d5c">
+<meta name="theme-color" content="#0f4a5c">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Little Bites: daily weaning menu</title>
 <style>
-:root{--bg:#f3f6ef;--card:#fff;--ink:#1f2a37;--mute:#64707a;--brand:#2f7d5c;--brand-d:#1f5e44;--line:#dde6d9;--soft:#e8f1e4;--green:#2f7d5c;--haldi:#f1b429;--indigo:#33428a;--r:20px;--shadow:0 1px 2px rgba(31,70,50,.06),0 6px 18px rgba(31,70,50,.07);--head:ui-rounded,"SF Pro Rounded","Nunito","Hind Siliguri",system-ui,sans-serif}
+:root{--bg:#fdf8f1;--card:#fff;--ink:#0f3b4a;--mute:#5d7480;--brand:#e85c85;--brand-d:#c23c68;--line:#eadfd2;--soft:#e3f3ea;--green:#6fc8a8;--haldi:#f3dc62;--indigo:#3d4fa8;--teal:#0f4a5c;--teal2:#1a7580;--mint:#6fc8a8;--coral:#f46b72;--peri:#778fea;--peach:#f8d9c8;--r:24px;--shadow:0 2px 0 rgba(15,74,92,.05),0 10px 24px rgba(15,74,92,.08);--head:ui-rounded,"SF Pro Rounded","Nunito","Hind Siliguri",system-ui,sans-serif}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali","Noto Sans Devanagari",sans-serif;padding-bottom:84px}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -105,44 +105,57 @@ input[type=text],input[type=date],input[type=email],input[type=password],input[t
 }
 @media(min-width:900px){#customPane{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto}body{padding-bottom:24px}}
 
-/* ---- visual polish ---- */
-body{background:var(--bg) radial-gradient(circle at 1px 1px,rgba(47,125,92,.07) 1px,transparent 0) 0 0/22px 22px;font-size:16px;line-height:1.5}
-h1,h2,h3,.brand,.stage b,.primary,.seg button,.tabbar button,.days button{font-family:var(--head)}
-header.top{background:linear-gradient(135deg,#2f7d5c,#1f5e44);box-shadow:0 2px 14px rgba(20,60,42,.25);position:sticky}
-header.top::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:6px;background:radial-gradient(circle at 6px 0,var(--haldi) 2.5px,transparent 3px) 0 0/16px 6px;opacity:.9;pointer-events:none}
-.brand{font-weight:800;letter-spacing:-.01em;font-size:1.25rem}
+/* ---- teal, cream and pink: storybook garden ---- */
+body{background:var(--bg);font-size:16px;line-height:1.5}
+h1,h2,h3,.brand,.stage b,.primary,.seg button,.tabbar button,.days button,.hero h1{font-family:var(--head)}
+header.top{background:linear-gradient(135deg,#0f4a5c,#146270);box-shadow:0 2px 14px rgba(8,50,64,.3);position:sticky}
+header.top::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:6px;background:radial-gradient(circle at 6px 0,var(--mint) 2.5px,transparent 3px) 0 0/16px 6px;opacity:.9;pointer-events:none}
+.brand{font-weight:900;letter-spacing:-.01em;font-size:1.25rem;white-space:nowrap}
 .brand img{border-radius:12px;box-shadow:0 0 0 2px rgba(255,255,255,.35)}
-.ghost{background:rgba(255,255,255,.16);transition:background .15s}.ghost:hover{background:rgba(255,255,255,.28)}
-.appsw{border-color:rgba(255,255,255,.45);padding:2px;gap:2px}.appsw button{border-radius:999px}.appsw button.on{background:var(--haldi);color:#3a2a00}
-.card{box-shadow:var(--shadow);border-color:transparent;padding:16px}
-.card h2{font-size:1.15rem;letter-spacing:-.01em}
-.card>h2::after{content:"";display:block;width:46px;margin:7px 0 10px;border-top:2.5px dashed var(--haldi)}
-.stage{background:linear-gradient(135deg,#e5f1e1,#f1f6e6);border-color:#d3e4cc}
-.stage b{font-size:1.1rem;color:var(--brand-d);margin-bottom:2px}
-.meal{border-left:5px solid var(--haldi);padding-left:14px}
-.meal.m-lunch{border-left-color:#4aa57a}.meal.m-snack{border-left-color:#ea8f7a}.meal.m-dinner{border-left-color:var(--indigo)}
-.meal .time b{font-family:var(--head)}.meal h3{font-size:1.1rem;letter-spacing:-.005em}
+.ghost{background:rgba(255,255,255,.14);transition:background .15s}.ghost:hover{background:rgba(255,255,255,.28)}
+.appsw{border-color:rgba(255,255,255,.45);padding:2px;gap:2px}.appsw button{border-radius:999px}.appsw button.on{background:var(--haldi);color:#2b3b00}
+
+/* hero scene */
+.hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#0c4559 0%,#1a7580 55%,#8fd6c6 100%);height:168px;margin-bottom:-26px}
+.hero svg{position:absolute;inset:0;width:100%;height:100%}
+.hero .words{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:20px 16px 0;text-align:center}
+.hero h1{margin:0;font-size:clamp(1.7rem,6.4vw,2.7rem);line-height:1.05;font-weight:900;letter-spacing:-.02em;color:#fff8ec;text-shadow:0 3px 0 #0a3342,0 6px 14px rgba(5,30,40,.35)}
+.hero p{margin:6px 0 0;color:#d7f1e8;font-size:.95rem;font-weight:600}
+@media(max-width:560px){.hero{height:150px}.hero p{font-size:.85rem}}
+.layout{position:relative;z-index:2}
+
+.card{box-shadow:var(--shadow);border:0;padding:18px;border-radius:var(--r)}
+.card h2{font-size:1.2rem;letter-spacing:-.01em;font-weight:900;color:var(--teal)}
+.card>h2::after{content:"";display:block;width:54px;margin:7px 0 10px;border-top:4px dotted var(--coral);border-radius:2px}
+.stage{background:linear-gradient(135deg,#e3f3ea,#fdf0d9);border:0;border-radius:var(--r);box-shadow:var(--shadow)}
+.stage b{font-size:1.15rem;font-weight:900;color:var(--teal);margin-bottom:2px}
+.meal{border-left:7px solid var(--haldi);padding-left:14px}
+.meal.m-lunch{border-left-color:var(--mint)}.meal.m-snack{border-left-color:var(--coral)}.meal.m-dinner{border-left-color:var(--peri)}
+.meal .time b{font-family:var(--head)}.meal h3{font-size:1.12rem;letter-spacing:-.005em;font-weight:800;color:var(--teal)}
 .bn{color:var(--indigo)}
 .days button,.secondary,.seg{transition:background .15s,color .15s,border-color .15s}
-.days button{border-radius:14px;border-color:var(--line)}
-.days button.on{box-shadow:0 3px 10px rgba(47,125,92,.28)}
-.weeks button.on{background:var(--indigo);border-color:var(--indigo)}
-.seg button.on{background:var(--brand)}
-.chip{background:#eaf3e6;color:var(--brand-d)}
-.chip.man{background:#e9ecf9;color:var(--indigo)}
-.primary{border-radius:14px;box-shadow:0 3px 10px rgba(47,125,92,.25);padding:11px 16px}
-.primary:hover{background:var(--brand-d)}
-.secondary{border-radius:14px}.secondary:hover{background:var(--soft)}
-.ex button{border-color:var(--haldi);color:#6b4d00}
-.days button.on small.rep,.weeks button small.rep{color:var(--brand)}
-input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid rgba(241,180,41,.65);outline-offset:2px}
-table.week th.today{color:#fff}
-.tabbar{box-shadow:0 -4px 16px rgba(31,70,50,.1);border-top:0}
-.tabbar button.on{color:var(--brand-d)!important;box-shadow:inset 0 3px 0 var(--haldi)}
-dialog{border-radius:24px;box-shadow:0 20px 60px rgba(20,40,30,.3)}
-dialog::backdrop{background:rgba(25,45,35,.5)}
+.days button{border-radius:16px;border:2px solid var(--line);background:#fff}
+.days button.on{background:var(--teal2);border-color:var(--teal2);color:#fff;box-shadow:0 3px 0 #0f4a5c}.days button.on small{color:#cdeee6}
+.weeks button.on{background:var(--teal);border-color:var(--teal)}
+.seg{background:#fff;border:2px solid var(--line)}.seg button.on{background:var(--teal2);color:#fff}
+.chip{background:var(--soft);color:var(--teal)}.chip.man{background:#e6eafc;color:var(--indigo)}
+.primary{border-radius:999px;background:var(--brand);color:#fff;box-shadow:0 4px 0 var(--brand-d);padding:12px 18px;font-weight:800;transition:transform .08s,box-shadow .08s}
+.primary:hover{background:#ee6f95}.primary:active{transform:translateY(3px);box-shadow:0 1px 0 var(--brand-d)}
+.secondary{border-radius:999px;background:#fff;color:var(--teal);border:2px solid var(--teal2);font-weight:800}.secondary:hover{background:var(--soft)}
+.link{color:var(--brand-d)}
+.ex button{border:2px dashed var(--mint);color:var(--teal)}
+.days button.on small.rep,.weeks button small.rep{color:var(--brand-d)}.weeks button.on small.rep{color:#ffd1de}
+input,select,textarea{border:2px solid var(--line);border-radius:14px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid rgba(232,92,133,.55);outline-offset:2px}
+table.week th.today{background:var(--teal2);color:#fff}
+.tabbar{box-shadow:0 -4px 16px rgba(15,74,92,.12);border-top:0;background:#fff}
+.tabbar button.on{color:var(--teal)!important;box-shadow:inset 0 4px 0 var(--coral)}
+dialog{border-radius:28px;box-shadow:0 20px 60px rgba(8,40,52,.35)}
+dialog::backdrop{background:rgba(8,40,52,.55)}
 .note{line-height:1.5}
-.bands button.on small{color:#3a2a00}.bands button.on{background:var(--brand)}
+.bands button.on{background:var(--teal2);border-color:var(--teal2)}.bands button.on small{color:#cdeee6}
+#playPane h3{color:var(--indigo)}
+.warnbox{background:#fff4ef}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -152,6 +165,24 @@ dialog::backdrop{background:rgba(25,45,35,.5)}
   <div class="who"><span id="who"></span><span class="appsw"><button data-app="food" class="on">Food</button><button data-app="play">Play</button></span><button class="ghost" id="acctBtn">Sign in</button><button class="ghost" id="settingsBtn">Baby</button></div>
 </header>
 
+<div class="hero" aria-hidden="false">
+  <svg viewBox="0 0 800 168" preserveAspectRatio="xMidYMax slice" role="img" aria-label="">
+    <defs><pattern id="dt" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.5" fill="#d3f1e6" opacity=".75"/></pattern><pattern id="dp" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.2" fill="#f8d9c8" opacity=".8"/></pattern></defs>
+    <circle cx="640" cy="40" r="60" fill="#f8d9c8" opacity=".12"/>
+    <path d="M0 120C90 96 170 104 260 118S430 100 520 112 700 98 800 116V168H0Z" fill="#2e9a95"/>
+    <path d="M0 120C90 96 170 104 260 118S430 100 520 112 700 98 800 116V168H0Z" fill="url(#dt)" opacity=".5"/>
+    <g stroke="#0c4559" stroke-width="3" stroke-linecap="round" fill="none"><path d="M120 120V70M120 96l-14-14M120 86l12-12"/><path d="M330 126V60M330 100l-16-16M330 88l14-14"/></g>
+    <circle cx="120" cy="58" r="34" fill="#17696f"/><circle cx="120" cy="58" r="34" fill="url(#dt)"/>
+    <circle cx="330" cy="50" r="40" fill="#5fbfae"/><circle cx="330" cy="50" r="40" fill="url(#dt)"/>
+    <g><path d="M450 124l22-62 22 62Z" fill="#0f5a68"/><path d="M458 98l14-40 14 40Z" fill="#1a7580"/><path d="M505 124l18-50 18 50Z" fill="#2e9a95"/><path d="M560 126l24-70 24 70Z" fill="#0f5a68"/><path d="M570 100l14-44 14 44Z" fill="#6fc8a8"/></g>
+    <g><rect x="640" y="92" width="62" height="40" rx="3" fill="#cfeee3"/><path d="M630 94l41-34 41 34Z" fill="#3d3a82"/><rect x="660" y="106" width="12" height="26" rx="6" fill="#1a7580"/><rect x="682" y="104" width="10" height="10" rx="2" fill="#f3dc62"/><rect x="694" y="52" width="8" height="16" fill="#f8d9c8"/></g>
+    <path d="M0 140C120 124 220 134 340 142S600 128 800 140V168H0Z" fill="#7fd0b8"/>
+    <path d="M0 140C120 124 220 134 340 142S600 128 800 140V168H0Z" fill="url(#dt)" opacity=".55"/>
+    <g fill="#f08aa6"><circle cx="60" cy="146" r="6"/><circle cx="220" cy="150" r="5"/><circle cx="410" cy="152" r="6"/><circle cx="610" cy="148" r="5"/><circle cx="760" cy="146" r="6"/></g>
+    <g fill="#f3dc62"><circle cx="60" cy="146" r="2.2"/><circle cx="220" cy="150" r="2"/><circle cx="410" cy="152" r="2.2"/><circle cx="610" cy="148" r="2"/><circle cx="760" cy="146" r="2.2"/></g>
+  </svg>
+  <div class="words"><h1>Little bites, big growth</h1><p>Home-style meals and play for every month</p></div>
+</div>
 <main class="layout">
   <section id="menuPane">
     <div class="stage" id="stage"></div>
