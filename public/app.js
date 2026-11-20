@@ -332,11 +332,11 @@
   function dayView(w, all) {
     const rows = all.meals.map((m) => {
       const f = w.plan[ui.day][m], lock = w.locked[ui.day][m];
-      if (!f) return `<div class="card meal"><div class="time"><b>${m}</b>${TIMES[m]}</div><div class="body skipped">Skipped</div></div>`;
+      if (!f) return `<div class="card meal m-${m}"><div class="time"><b>${m}</b>${TIMES[m]}</div><div class="body skipped">Skipped</div></div>`;
       const chips = f.nut.slice(0, 3).map((n) => `<span class="chip">${esc(n)}</span>`).join('') +
         (lock === 'rule' ? '<span class="chip lock">from your rules</span>' : '') + (lock === 'manual' ? '<span class="chip man">your pick</span>' : '') +
         (f.tags.includes('finger') ? '<span class="chip">finger food</span>' : '');
-      return `<div class="card meal"><div class="time"><b>${m}</b>${TIMES[m]}</div><div class="body"><h3>${esc(f.n)}</h3>${state.prefs.bn && f.bn ? `<div class="bn" lang="bn">${esc(f.bn)}</div>` : ''}<div class="chips">${chips}</div><div class="tip">${esc(f.tip)}</div>
+      return `<div class="card meal m-${m}"><div class="time"><b>${m}</b>${TIMES[m]}</div><div class="body"><h3>${esc(f.n)}</h3>${state.prefs.bn && f.bn ? `<div class="bn" lang="bn">${esc(f.bn)}</div>` : ''}<div class="chips">${chips}</div><div class="tip">${esc(f.tip)}</div>
         ${lock === 'rule' ? '' : `<div class="acts"><button class="link" data-swap="${w.cycle}|${ui.day}|${m}">Swap this dish</button></div>`}</div></div>`;
     }).join('');
     return `<div>${rows}</div><div class="milk">Breast/formula milk continues on demand between meals.</div>`;
