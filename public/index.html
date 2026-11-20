@@ -123,9 +123,12 @@ input[type=text],input[type=date],input[type=email],input[type=password],select{
 
     <div class="card">
       <h2>Add guidance from a post</h2>
-      <div class="tip">Paste an influencer's caption (any language) or upload a screenshot. I'll pull out the feeding advice and you choose what to apply.</div>
+      <div class="tip">Paste a link to a public post, paste the caption (any language), or upload a screenshot. I'll pull out the feeding advice and you choose what to apply.</div>
       <label for="postSource">Who posted it? (optional)</label>
       <input type="text" id="postSource" maxlength="60" placeholder="@handle or page name">
+      <label for="postLink">Link to a public post</label>
+      <input type="url" id="postLink" maxlength="500" placeholder="https://youtube.com/…  or a blog / TikTok link">
+      <div class="tip">Works with YouTube, TikTok and blogs. Instagram, Facebook and X often need a login, so paste the caption or a screenshot for those.</div>
       <label for="postText">Post text</label>
       <textarea id="postText" placeholder="Paste caption here…"></textarea>
       <label for="postImg">or screenshot</label>

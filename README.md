@@ -10,7 +10,7 @@ The demo is the static frontend only. Menus, grocery lists and swaps work and ar
 - **Age-aware**: pick the baby's age (6, 7, 8, 9–11, 12+ months), or follow the date of birth and let the menu advance on its own. The menu rebuilds whenever the age changes.
 - **Grocery list**: built from the menu for one week, two weeks or a month, grouped by aisle, with copy, download and tick-off.
 - **Swaps and rules**: swap any meal, or customise in plain language (English, বাংলা, हिन्दी): "no dairy", "ragi twice a week", "only fruit on Sundays".
-- **Influencer posts**: paste a caption or upload a screenshot; feeding advice is turned into suggested rules the mother can accept. Unsafe advice (honey, salt/sugar, whole nuts, cow's milk as a drink before 12 months, detox diets…) is shown as a caution and never becomes a rule. Requires the server and a Gemini API key.
+- **Influencer posts**: paste a public link (YouTube videos are watched by Gemini; TikTok, blogs and other pages are read as text; `linkfetch.js` refuses private/internal addresses, limits redirects, size and time), paste a caption, or upload a screenshot. Instagram, Facebook and X usually need a login, so use the caption or screenshot there; feeding advice is turned into suggested rules the mother can accept. Unsafe advice (honey, salt/sugar, whole nuts, cow's milk as a drink before 12 months, detox diets…) is shown as a caution and never becomes a rule. Requires the server and a Gemini API key.
 - **Accounts and sync** (server only): email and password, local-first, last-write-wins sync across devices, email verification, password reset, account deletion.
 - **Offline**: data lives in IndexedDB on the device, so the app works without a connection.
 

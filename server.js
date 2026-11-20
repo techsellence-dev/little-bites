@@ -31,6 +31,7 @@ require('./db').migrateLegacy(store, DATA_DIR);
 store.purge();
 setInterval(() => store.purge(), 3600e3).unref();
 const mail = require('./mail');
+const { readLink, LinkError } = require('./linkfetch');
 const APP_URL = (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
 if (!process.env.RESEND_API_KEY && !['resend', 'ses'].includes(process.env.MAIL_PROVIDER))
   console.warn('[mail] no mail provider configured: password-reset and verification emails are only printed to this log (dev mode)');
@@ -117,7 +118,8 @@ async function callGemini(system, content, maxTokens = 1200) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { status: 503, json: { error: 'no_key' } };
   const parts = (Array.isArray(content) ? content : [{ type: 'text', text: content }]).map((c) =>
-    c.type === 'image' ? { inlineData: { mimeType: c.source.media_type, data: c.source.data } } : { text: c.text });
+    c.type === 'image' ? { inlineData: { mimeType: c.source.media_type, data: c.source.data } }
+      : c.type === 'video' ? { fileData: { fileUri: c.url } } : { text: c.text });
   const base = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
   const reqBody = JSON.stringify({
     systemInstruction: { parts: [{ text: system }] },
@@ -279,15 +281,29 @@ async function route(req, res, url, send) {
     const b = await readBody(req, 6e6);
     const text = String(b.text || '').slice(0, 6000);
     const img = b.image && typeof b.image === 'object' ? b.image : null;
-    if (!text.trim() && !img) return send(400, { error: 'empty' });
+    const link = String(b.url || '').trim().slice(0, 500);
+    if (!text.trim() && !img && !link) return send(400, { error: 'empty' });
+    let page = null;
+    if (link) {
+      try { page = await readLink(link); } catch (e) {
+        if (!(e instanceof LinkError)) throw e;
+        const code = ['bad_url', 'blocked', 'unreadable', 'timeout'].includes(e.code) ? e.code : 'fetch_failed';
+        // a pasted caption or screenshot alongside the link still works when the page itself is unreadable
+        if (!text.trim() && !img) return send(code === 'blocked' || code === 'bad_url' ? 400 : 422, { error: code === 'blocked' ? 'bad_url' : code });
+      }
+    }
     const content = [];
+    if (page && page.videoUrl) content.push({ type: 'video', url: page.videoUrl });
     if (img) {
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(img.type) || typeof img.data !== 'string' || img.data.length > 5.5e6 || !/^[A-Za-z0-9+/=]+$/.test(img.data)) return send(400, { error: 'bad_image' });
       content.push({ type: 'image', source: { type: 'base64', media_type: img.type, data: img.data } });
     }
     const ctx = b.context || {};
-    content.push({ type: 'text', text: `Baby age (months): ${Number(ctx.ageMonths) || 'unknown'}. Known allergies: ${clip(ctx.allergies, 200)}.\nVocabulary: ${clip(b.vocab, 6000)}\n<influencer_post>${text || '(see image)'}</influencer_post>` });
+    const fromLink = page ? [page.author && `Author: ${page.author}`, page.title && `Title: ${page.title}`, page.text].filter(Boolean).join('\n') : '';
+    const post = [fromLink, text].filter(Boolean).join('\n\n') || (page && page.videoUrl ? '(see video)' : '(see image)');
+    content.push({ type: 'text', text: `Baby age (months): ${Number(ctx.ageMonths) || 'unknown'}. Known allergies: ${clip(ctx.allergies, 200)}.\nVocabulary: ${clip(b.vocab, 6000)}\n<influencer_post>${post.replace(/<\/?influencer_post>/gi, '')}</influencer_post>` });
     const out = await callGemini(GUIDANCE_SYSTEM, content, 1800);
+    if (out.status === 200 && page) out.json.source = { url: page.url, host: page.host, title: page.title, author: page.author };
     return send(out.status, out.json);
   }
 

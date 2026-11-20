@@ -198,19 +198,20 @@
     });
   }
   async function readPost() {
-    const text = $('postText').value.trim(), file = $('postImg').files[0];
-    if (!text && !file) { $('postResult').innerHTML = '<div class="reply warn">Paste the caption or choose a screenshot first.</div>'; return; }
+    const text = $('postText').value.trim(), file = $('postImg').files[0], link = $('postLink').value.trim();
+    if (!text && !file && !link) { $('postResult').innerHTML = '<div class="reply warn">Paste a link, paste the caption, or choose a screenshot first.</div>'; return; }
     const btn = $('readPost'); btn.disabled = true; btn.textContent = 'Reading…';
     let image = null;
     try { if (file) image = await shrinkImage(file); } catch (_) { btn.disabled = false; btn.textContent = 'Read post'; $('postResult').innerHTML = '<div class="reply warn">Could not read that image. Try a PNG or JPG.</div>'; return; }
-    const r = await api('/api/guidance', { method: 'POST', body: JSON.stringify({ text, image, vocab: vocab(), context: { ageMonths: current ? current.age : 6, allergies: (state.profile && state.profile.allergies) || [] } }) });
+    const r = await api('/api/guidance', { method: 'POST', body: JSON.stringify({ text, image, url: link, vocab: vocab(), context: { ageMonths: current ? current.age : 6, allergies: (state.profile && state.profile.allergies) || [] } }) });
     btn.disabled = false; btn.textContent = 'Read post';
     if (!r.ok) {
-      const m = r.status === 503 ? 'Reading posts needs the AI connection, which is not set up on this server.' : r.status === 429 ? 'Too many requests this hour. Please try again later.' : (r.json && r.json.error === 'upstream' && (r.json.detail === 401 || r.json.detail === 403)) ? 'Reading posts is unavailable: the server\'s Gemini API key was rejected. The site owner needs to update GEMINI_API_KEY.' : 'Could not read the post. Please try again.';
+      const m = r.status === 503 ? 'Reading posts needs the AI connection, which is not set up on this server.' : r.status === 429 ? 'Too many requests this hour. Please try again later.' : (r.json && r.json.error === 'upstream' && (r.json.detail === 401 || r.json.detail === 403)) ? 'Reading posts is unavailable: the server\'s Gemini API key was rejected. The site owner needs to update GEMINI_API_KEY.' : (r.json && r.json.error === 'bad_url') ? 'That does not look like a public link. Paste the full address (https://...) of a public post.' : (r.json && (r.json.error === 'unreadable' || r.json.error === 'fetch_failed' || r.json.error === 'timeout')) ? 'I could not read that link. Instagram, Facebook and X often hide posts behind a login. Paste the caption or upload a screenshot instead.' : 'Could not read the post. Please try again.';
       $('postResult').innerHTML = `<div class="reply warn">${esc(m)}</div>`; return;
     }
     const g = r.json;
-    pending = { source: $('postSource').value.trim().slice(0, 60), g, rules: (Array.isArray(g.suggestions) ? g.suggestions : []).slice(0, 8).map((s) => ({ rule: cleanRule(s.rule), why: String(s.why || ''), caution: s.caution ? String(s.caution) : '' })).filter((s) => s.rule) };
+    const src = g.source && /^https?:\/\//.test(g.source.url || '') ? g.source : null;
+    pending = { source: $('postSource').value.trim().slice(0, 60) || (src ? (src.author || src.host) : ''), link: src ? src.url.slice(0, 300) : '', g, rules: (Array.isArray(g.suggestions) ? g.suggestions : []).slice(0, 8).map((s) => ({ rule: cleanRule(s.rule), why: String(s.why || ''), caution: s.caution ? String(s.caution) : '' })).filter((s) => s.rule) };
     renderPending();
   }
   function renderPending() {
@@ -226,9 +227,9 @@
     const g = pending.g, id = uid();
     const picked = [...document.querySelectorAll('#postResult [data-sug]:checked')].map((c) => pending.rules[+c.dataset.sug].rule);
     picked.forEach((r) => { r.post = id; state.rules.push(r); });
-    state.posts.unshift({ id, source: pending.source || 'Saved post', language: String(g.language || ''), summary: String(g.summary_en || '').slice(0, 600), date: new Date().toISOString().slice(0, 10), rules: picked.length });
+    state.posts.unshift({ id, source: pending.source || 'Saved post', language: String(g.language || ''), summary: String(g.summary_en || '').slice(0, 600), date: new Date().toISOString().slice(0, 10), rules: picked.length, ...(pending.link ? { link: pending.link } : {}) });
     pending = null; $('postResult').innerHTML = `<div class="reply">Saved. ${picked.length} rule(s) added to your menu.</div>`;
-    $('postText').value = ''; $('postImg').value = ''; $('postSource').value = '';
+    $('postText').value = ''; $('postImg').value = ''; $('postSource').value = ''; $('postLink').value = '';
     touch(); render();
   }
 
