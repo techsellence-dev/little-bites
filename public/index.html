@@ -156,10 +156,35 @@ dialog::backdrop{background:rgba(8,40,52,.55)}
 .bands button.on{background:var(--teal2);border-color:var(--teal2)}.bands button.on small{color:#cdeee6}
 #playPane h3{color:var(--indigo)}
 .warnbox{background:#fff4ef}
+/* ---- living background ---- */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg i{position:absolute;display:block;border-radius:50%;opacity:.55;will-change:transform;animation:drift var(--t,22s) ease-in-out var(--d,0s) infinite alternate}
+.bg i.leaf{border-radius:0 100% 0 100%;opacity:.5;animation-name:sway}
+.bg i:nth-child(1){left:-4%;top:12%;width:150px;height:150px;background:var(--b1);--t:24s}
+.bg i:nth-child(2){right:-3%;top:30%;width:120px;height:120px;background:var(--b2);--t:19s;--d:-6s}
+.bg i:nth-child(3){left:8%;top:62%;width:90px;height:90px;background:var(--b3);--t:17s;--d:-3s}
+.bg i:nth-child(4){right:12%;top:78%;width:170px;height:170px;background:var(--b4);--t:26s;--d:-9s}
+.bg i:nth-child(5){left:42%;top:6%;width:70px;height:70px;background:var(--b5);--t:15s;--d:-2s}
+.bg i:nth-child(6){left:24%;top:38%;width:44px;height:58px;background:var(--b1);--t:18s;--d:-5s}
+.bg i:nth-child(7){right:26%;top:50%;width:40px;height:52px;background:var(--b3);--t:21s;--d:-11s}
+.bg i:nth-child(8){left:60%;top:88%;width:50px;height:64px;background:var(--b2);--t:20s;--d:-7s}
+body{--b1:#bfe9dc;--b2:#f8d9c8;--b3:#fbe9a0;--b4:#d9e1fb;--b5:#f9c6d3}
+body[data-app=play]{--b1:#d9e1fb;--b2:#f9c6d3;--b3:#bfe9dc;--b4:#fbe9a0;--b5:#f8d9c8}
+.bg i{transition:background 1.2s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(34px,-60px) scale(1.12)}}
+@keyframes sway{from{transform:translate(0,0) rotate(-18deg)}to{transform:translate(-30px,-70px) rotate(24deg)}}
+.cloud{animation:cloud var(--t,60s) linear var(--d,0s) infinite alternate}
+@keyframes cloud{from{transform:translateX(-40px)}to{transform:translateX(60px)}}
+.hero .crown{transform-box:fill-box;transform-origin:50% 100%;animation:crown 5s ease-in-out infinite alternate}
+@keyframes crown{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+.hero h1{animation:bob 4s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+@media(prefers-reduced-motion:reduce){.bg i,.cloud,.crown,.hero h1{animation:none!important}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body data-tab="menu" data-app="food">
+<div class="bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i class="leaf"></i><i class="leaf"></i><i class="leaf"></i></div>
 <header class="top">
   <div class="brand"><img src="icon.svg" alt="">Little Bites</div>
   <div class="who"><span id="who"></span><span class="appsw"><button data-app="food" class="on">Food</button><button data-app="play">Play</button></span><button class="ghost" id="acctBtn">Sign in</button><button class="ghost" id="settingsBtn">Baby</button></div>
@@ -168,12 +193,12 @@ dialog::backdrop{background:rgba(8,40,52,.55)}
 <div class="hero" aria-hidden="false">
   <svg viewBox="0 0 800 168" preserveAspectRatio="xMidYMax slice" role="img" aria-label="">
     <defs><pattern id="dt" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.5" fill="#d3f1e6" opacity=".75"/></pattern><pattern id="dp" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.2" fill="#f8d9c8" opacity=".8"/></pattern></defs>
-    <circle cx="640" cy="40" r="60" fill="#f8d9c8" opacity=".12"/>
+    <g class="cloud" style="--t:50s" fill="#fff8ec" opacity=".22"><ellipse cx="170" cy="34" rx="46" ry="12"/><ellipse cx="196" cy="26" rx="30" ry="12"/></g><g class="cloud" style="--t:70s;--d:-20s" fill="#fff8ec" opacity=".18"><ellipse cx="520" cy="46" rx="52" ry="12"/><ellipse cx="548" cy="37" rx="32" ry="12"/></g><circle cx="640" cy="40" r="60" fill="#f8d9c8" opacity=".12"/>
     <path d="M0 120C90 96 170 104 260 118S430 100 520 112 700 98 800 116V168H0Z" fill="#2e9a95"/>
     <path d="M0 120C90 96 170 104 260 118S430 100 520 112 700 98 800 116V168H0Z" fill="url(#dt)" opacity=".5"/>
     <g stroke="#0c4559" stroke-width="3" stroke-linecap="round" fill="none"><path d="M120 120V70M120 96l-14-14M120 86l12-12"/><path d="M330 126V60M330 100l-16-16M330 88l14-14"/></g>
-    <circle cx="120" cy="58" r="34" fill="#17696f"/><circle cx="120" cy="58" r="34" fill="url(#dt)"/>
-    <circle cx="330" cy="50" r="40" fill="#5fbfae"/><circle cx="330" cy="50" r="40" fill="url(#dt)"/>
+    <g class="crown"><circle cx="120" cy="58" r="34" fill="#17696f"/><circle cx="120" cy="58" r="34" fill="url(#dt)"/></g>
+    <g class="crown" style="animation-delay:-2s"><circle cx="330" cy="50" r="40" fill="#5fbfae"/><circle cx="330" cy="50" r="40" fill="url(#dt)"/></g>
     <g><path d="M450 124l22-62 22 62Z" fill="#0f5a68"/><path d="M458 98l14-40 14 40Z" fill="#1a7580"/><path d="M505 124l18-50 18 50Z" fill="#2e9a95"/><path d="M560 126l24-70 24 70Z" fill="#0f5a68"/><path d="M570 100l14-44 14 44Z" fill="#6fc8a8"/></g>
     <g><rect x="640" y="92" width="62" height="40" rx="3" fill="#cfeee3"/><path d="M630 94l41-34 41 34Z" fill="#3d3a82"/><rect x="660" y="106" width="12" height="26" rx="6" fill="#1a7580"/><rect x="682" y="104" width="10" height="10" rx="2" fill="#f3dc62"/><rect x="694" y="52" width="8" height="16" fill="#f8d9c8"/></g>
     <path d="M0 140C120 124 220 134 340 142S600 128 800 140V168H0Z" fill="#7fd0b8"/>
