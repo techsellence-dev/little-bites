@@ -5,7 +5,7 @@
   const TIMES = { breakfast: '8:00', lunch: '12:30', snack: '4:00', dinner: '7:00' };
   const EXAMPLES = ['No dairy for now', 'Ragi twice a week', 'Only fruit on Sundays', 'Iron-rich food 5 days a week', 'সপ্তাহে তিনদিন মাছ', 'No dinner on Saturday'];
 
-  const fresh = () => ({ profile: null, rules: [], swaps: {}, posts: [], prefs: { bn: true }, groceryDone: {}, updatedAt: 0 });
+  const fresh = () => ({ profile: null, rules: [], swaps: {}, posts: [], prefs: { bn: true }, groceryDone: {}, done: {}, hide: {}, play: [], playPosts: [], updatedAt: 0 });
   const normalize = (s) => ({ ...fresh(), ...(s || {}), prefs: { bn: true, ...((s && s.prefs) || {}) } });
   let state = fresh();
   let ui = { day: todayKey(), view: 'day', week: 0, gro: 1 };
@@ -197,6 +197,7 @@
       img.src = url;
     });
   }
+  const errText = (r) => r.status === 503 ? 'Reading posts needs the AI connection, which is not set up on this server.' : r.status === 429 ? 'Too many requests this hour. Please try again later.' : (r.json && r.json.error === 'upstream' && (r.json.detail === 401 || r.json.detail === 403)) ? 'Reading posts is unavailable: the server\'s Gemini API key was rejected. The site owner needs to update GEMINI_API_KEY.' : (r.json && r.json.error === 'bad_url') ? 'That does not look like a public link. Paste the full address (https://...) of a public post.' : (r.json && (r.json.error === 'unreadable' || r.json.error === 'fetch_failed' || r.json.error === 'timeout')) ? 'I could not read that link. Instagram, Facebook and X often hide posts behind a login. Paste the caption or upload a screenshot instead.' : 'Could not read the post. Please try again.';
   async function readPost() {
     const text = $('postText').value.trim(), file = $('postImg').files[0], link = $('postLink').value.trim();
     if (!text && !file && !link) { $('postResult').innerHTML = '<div class="reply warn">Paste a link, paste the caption, or choose a screenshot first.</div>'; return; }
@@ -206,7 +207,7 @@
     const r = await api('/api/guidance', { method: 'POST', body: JSON.stringify({ text, image, url: link, vocab: vocab(), context: { ageMonths: current ? current.age : 6, allergies: (state.profile && state.profile.allergies) || [] } }) });
     btn.disabled = false; btn.textContent = 'Read post';
     if (!r.ok) {
-      const m = r.status === 503 ? 'Reading posts needs the AI connection, which is not set up on this server.' : r.status === 429 ? 'Too many requests this hour. Please try again later.' : (r.json && r.json.error === 'upstream' && (r.json.detail === 401 || r.json.detail === 403)) ? 'Reading posts is unavailable: the server\'s Gemini API key was rejected. The site owner needs to update GEMINI_API_KEY.' : (r.json && r.json.error === 'bad_url') ? 'That does not look like a public link. Paste the full address (https://...) of a public post.' : (r.json && (r.json.error === 'unreadable' || r.json.error === 'fetch_failed' || r.json.error === 'timeout')) ? 'I could not read that link. Instagram, Facebook and X often hide posts behind a login. Paste the caption or upload a screenshot instead.' : 'Could not read the post. Please try again.';
+      const m = errText(r);
       $('postResult').innerHTML = `<div class="reply warn">${esc(m)}</div>`; return;
     }
     const g = r.json;
@@ -254,6 +255,7 @@
   function render() {
     renderAcct();
     const p = state.profile; if (!p) return;
+    Play.render();
     const all = plan();
     ui.week = Math.min(ui.week, all.weeks.length - 1);
     const w = all.weeks[ui.week];
@@ -402,6 +404,10 @@
     else if (b.id === 'applyPost') applyPost();
     else if (b.id === 'discardPost') { pending = null; $('postResult').innerHTML = ''; }
   });
+  document.querySelectorAll('.appsw button').forEach((b) => b.addEventListener('click', () => {
+    document.body.dataset.app = b.dataset.app; document.querySelectorAll('.appsw button').forEach((x) => x.classList.toggle('on', x === b)); scrollTo(0, 0); Play.render();
+  }));
+  Play.init({ $, esc, uid, api, touch, state: () => state, age: () => Engine.profileAge(state.profile), shrink: shrinkImage, errText });
   $('examples').innerHTML = EXAMPLES.map((x) => `<button data-ex="${esc(x)}">${esc(x)}</button>`).join('');
   $('go').addEventListener('click', applyInstruction);
   $('readPost').addEventListener('click', readPost);

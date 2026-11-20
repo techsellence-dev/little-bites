@@ -76,6 +76,15 @@ textarea{width:100%;min-height:84px;border:1px solid var(--line);border-radius:1
 .sug input{margin-top:4px}
 .sug .cw{color:#a15a00;font-size:.82rem}
 .note{font-size:.75rem;color:var(--mute);max-width:1100px;margin:0 auto;padding:0 16px 16px}
+.appsw{display:inline-flex;border:1px solid rgba(255,255,255,.6);border-radius:999px;overflow:hidden}
+.appsw button{border:0;background:none;color:#fff;padding:4px 12px;font-weight:600}.appsw button.on{background:#fff;color:var(--brand-d)}
+#playPane{display:none;max-width:760px;margin:0 auto;padding:16px}
+body[data-app=play] #playPane{display:block}body[data-app=play] .layout,body[data-app=play] .tabbar{display:none}
+.bands{margin-bottom:0}.pls{list-style:none;margin:0;padding:0}.pl{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.pl>span{flex:1}.pl.hid{opacity:.5}.pl input{margin-top:4px}#playPane h3{font-size:.9rem;margin:12px 0 2px;color:var(--brand-d)}
+.safe{margin:6px 0 0;padding-left:18px;font-size:.88rem}.warnbox{background:#fff8e8;border-color:#f0dcae}
+.addrow{display:flex;gap:8px}.addrow select{width:auto}
+@media(max-width:899px){body[data-app=play]{padding-bottom:24px}}
 .tabbar{display:none}
 dialog{border:0;border-radius:20px;padding:20px;max-width:420px;width:calc(100% - 24px);background:#fff;color:var(--ink)}
 dialog::backdrop{background:rgba(58,46,42,.45)}
@@ -94,10 +103,10 @@ input[type=text],input[type=date],input[type=email],input[type=password],select{
 @media(min-width:900px){#customPane{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto}body{padding-bottom:24px}}
 </style>
 </head>
-<body data-tab="menu">
+<body data-tab="menu" data-app="food">
 <header class="top">
   <div class="brand"><img src="icon.svg" alt="">Little Bites</div>
-  <div class="who"><span id="who"></span><button class="ghost" id="acctBtn">Sign in</button><button class="ghost" id="settingsBtn">Baby</button></div>
+  <div class="who"><span id="who"></span><span class="appsw"><button data-app="food" class="on">Food</button><button data-app="play">Play</button></span><button class="ghost" id="acctBtn">Sign in</button><button class="ghost" id="settingsBtn">Baby</button></div>
 </header>
 
 <main class="layout">
@@ -160,6 +169,24 @@ input[type=text],input[type=date],input[type=email],input[type=password],select{
     </div>
   </section>
 </main>
+<section id="playPane">
+  <div id="playBody"></div>
+  <div class="card">
+    <h2>Add ideas from a post</h2>
+    <div class="tip">Paste a link to a public post about baby play, milestones or toys (YouTube, TikTok, blogs), or a caption or screenshot. You choose which ideas to add.</div>
+    <label for="pSource">Who posted it? (optional)</label>
+    <input type="text" id="pSource" maxlength="60" placeholder="@handle or page name">
+    <label for="pLink">Link to a public post</label>
+    <input type="url" id="pLink" maxlength="500" placeholder="https://youtube.com/…">
+    <label for="pText">or caption text</label>
+    <textarea id="pText" placeholder="Paste caption here…"></textarea>
+    <label for="pImg">or screenshot</label>
+    <input type="file" id="pImg" accept="image/*">
+    <button class="secondary" id="pRead">Read post</button>
+    <div id="pResult"></div>
+  </div>
+  <div class="card" id="playPostsCard" style="display:none"><h2>Saved play posts</h2><ul class="rules" id="playPosts"></ul></div>
+</section>
 <footer class="foot"><a href="https://github.com/techsellence-dev/little-bites" target="_blank" rel="noopener">Little Bites on GitHub</a></footer>
 
 <p class="note">General guidance, not medical advice. Influencer advice is not vetted by Little Bites: check with your paediatrician before introducing allergens, or if your baby has a medical condition. No added salt or sugar, no honey before 12 months, no whole nuts. Milk feeds continue alongside solids.</p>
@@ -240,6 +267,8 @@ input[type=text],input[type=date],input[type=email],input[type=password],select{
 <script src="foods.js"></script>
 <script src="engine.js"></script>
 <script src="grocery.js"></script>
+<script src="milestones.js"></script>
+<script src="play.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
