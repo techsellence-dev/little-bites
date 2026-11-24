@@ -26,7 +26,6 @@ Without `GEMINI_API_KEY` the menu, grocery list, accounts and sync still work; o
 ## Deployment
 Two targets, both automatic on every push to `main`:
 
-- **Static demo (GitHub Pages):** `.github/workflows/pages.yml` publishes `public/` to https://techsellence-dev.github.io/little-bites/.
 - **Full app (AWS EC2):** `.github/workflows/deploy.yml` deploys to https://littlebites.techsellence.in.
 
 ### How the AWS deploy works
@@ -52,7 +51,7 @@ Any host with Node and HTTPS works. A `Dockerfile` is included. Set `TRUST_PROXY
 
 ## Project layout
 - `public/` frontend: `foods.js` dish catalogue · `engine.js` weekly planner and rule engine · `grocery.js` grocery list · `app.js` UI and sync · `store.js` IndexedDB · `sw.js` service worker
-- `deploy/` systemd units, nginx config, deploy and backup scripts · `.github/workflows/` Pages and EC2 deploys
+- `deploy/` systemd units, nginx config, deploy and backup scripts · `.github/workflows/` EC2 deploy
 - `server.js` static files, auth, sync and AI endpoints · `db.js` SQLite storage (the only file that touches storage) · `mail.js` email
 
 ## Before real users
