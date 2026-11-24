@@ -192,7 +192,7 @@
     });
     if ((m.notes || []).length) h += `<div class="tip"><i>${m.notes.map(esc).join(' ')}</i></div>`;
     if (m.link) h += `<div class="tip"><a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">Source link</a></div>`;
-    return `<div class="msg bot${m.error ? ' err' : ''}"><div class="bub">${h}</div></div>`;
+    return `<div class="msg bot${m.error ? ' bad' : ''}"><div class="bub">${h}</div></div>`;
   }
   function renderChat(typing) {
     const log = $('chatLog'); if (!log) return;
@@ -249,6 +249,7 @@
     if (e === 'bad_url') return 'That does not look like a public link. Paste the full address (https://...) of a public post.';
     if (e === 'unreadable' || e === 'fetch_failed' || e === 'timeout') return 'I could not read that link. Instagram, Facebook and X often hide posts behind a login. Paste the caption or attach a screenshot instead.';
     if (e === 'bad_image') return 'I could not use that image. Try a PNG or JPG.';
+    if (e === 'upstream' || e === 'timeout' || e === 'bad_output' || e === 'bad_json') return 'The AI service is busy right now, so I could not finish. Please send it again in a minute.';
     return 'Something went wrong. Please try again.';
   }
   function interpret(res) {

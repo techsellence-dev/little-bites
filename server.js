@@ -143,9 +143,11 @@ async function callGemini(system, content, maxTokens = 1200) {
     generationConfig: { maxOutputTokens: maxTokens * 4, temperature: 0.2, responseMimeType: 'application/json' },
   });
   let r;
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  const FALLBACK = process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash';
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const model = attempt === 1 ? MODEL : FALLBACK; // overloaded primary: switch model
     try {
-      r = await fetch(`${base}/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
+      r = await fetch(`${base}/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
         body: reqBody,
@@ -157,7 +159,7 @@ async function callGemini(system, content, maxTokens = 1200) {
     }
     if (r && r.status !== 429 && r.status < 500) break;
     if (r) console.error(`[gemini] attempt ${attempt} got ${r.status}`);
-    if (attempt < 2) await new Promise((ok) => setTimeout(ok, 1500));
+    if (attempt < 3) await new Promise((ok) => setTimeout(ok, 1500));
   }
   if (!r) return { status: 504, json: { error: 'timeout' } };
   if (!r.ok) {
