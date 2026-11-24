@@ -82,7 +82,7 @@ const Engine = (() => {
   function context(FOODS, profile, allRules) {
     const age = Math.max(6, profile.ageMonths || 6);
     const rules = activeRules(allRules, age);
-    const pool = FOODS.filter((f) => f.m <= age && dietOK(f, profile.diet || 'veg') && !(profile.allergies || []).some((a) => f.a.includes(a)));
+    const pool = FOODS.filter((f) => f.m <= age && age <= (f.x || 99) && dietOK(f, profile.diet || 'veg') && !(profile.allergies || []).some((a) => f.a.includes(a)));
     const excl = rules.filter((r) => r.kind === 'exclude');
     const ok = (f, day, meal) => !excl.some((r) => inScope(r, day, meal) && matches(f, r.target));
     return { age, pool, ok, rules };
@@ -114,7 +114,7 @@ const Engine = (() => {
       const r = rng(hash(`${seed}|${week}|${day}|${meal}`));
       // Prefer dishes not used yet in the plan, not already served today, and (gently) ones suited to the baby's current stage.
       const today = (f) => meals.some((m) => plan[day][m] && plan[day][m].id === f.id) ? 25 : 0;
-      const score = (f) => (usage[f.id] || 0) * 10 + today(f) + Math.min(age - f.m, 6) * 0.8 + r() * 5;
+      const score = (f) => (usage[f.id] || 0) * 10 + today(f) + Math.min(Math.abs(age - (f.m + Math.min(f.x || 24, f.m + 12)) / 2), 8) * 0.7 + r() * 5;
       let pick = null;
       if (only.length) {
         const m = pool.filter((f) => ok(f, day, meal) && only.some((o) => matches(f, o.target)));

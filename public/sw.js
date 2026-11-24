@@ -1,5 +1,5 @@
-const CACHE = 'little-bites-v21';
-const ASSETS = ['./', 'index.html', 'app.js', 'store.js', 'engine.js', 'grocery.js', 'foods.js', 'recipes.js', 'milestones.js', 'play.js', 'icon.svg', 'icon-192.png', 'manifest.webmanifest'];
+const CACHE = 'little-bites-v22';
+const ASSETS = ['./', 'index.html', 'app.js', 'store.js', 'engine.js', 'grocery.js', 'foods.js', 'toddler.js', 'recipes.js', 'milestones.js', 'play.js', 'icon.svg', 'icon-192.png', 'manifest.webmanifest'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS))); self.skipWaiting(); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((k) => Promise.all(k.filter((x) => x !== CACHE).map((x) => caches.delete(x))))); self.clients.claim(); });
 self.addEventListener('fetch', (e) => {

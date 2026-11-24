@@ -25,6 +25,8 @@ const Grocery = (() => {
     egg: I('Eggs', 'dairy'),
     chicken: I('Chicken', 'protein'), rui: I('Rui fish (boneless)', 'protein'), bhetki: I('Bhetki fish (boneless)', 'protein'),
     katla: I('Katla fish (boneless)', 'protein'), fish: I('Fish (boneless)', 'protein'),
+    cauliflower: I('Phoolkopi (cauliflower)', 'veg'), cucumber: I('Cucumber', 'veg'), cabbage: I('Cabbage (bandhakopi)', 'veg'), corn: I('Sweet corn', 'veg'), 'banana flower': I('Mocha (banana flower)', 'veg'),
+    coconut: I('Coconut (fresh, grated)', 'veg'), rajma: I('Rajma (kidney beans)', 'lentil'), pear: I('Pear', 'fruit'), dates: I('Soft dates (khejur)', 'fruit'),
     almond: I('Almonds (to grind fine)', 'nut'),
   };
 

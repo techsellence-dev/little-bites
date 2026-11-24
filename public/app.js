@@ -331,8 +331,12 @@
     if (age < 7) return ['6 months: first tastes', 'Four small tasting meals a day: 1 to 3 spoonfuls of smooth purée or thin mash each. Breast/formula milk is still the main nutrition.'];
     if (age < 8) return ['7 months: thicker mashes', 'Four small meals: thicker, slightly textured mashes, one new food at a time, 3 to 5 spoonfuls. Milk feeds continue.'];
     if (age < 9) return ['8 months: lumps & finger foods', 'Four meals: coarse mashes with soft lumps and first finger foods (soft sticks, torn pieces). Fish, chicken and egg can be offered if your diet setting includes them.'];
-    if (age < 12) return ['9-11 months: building variety', 'Four meals: mashed and finely chopped foods, more finger foods, bigger portions. Offer water in a cup.'];
-    return ['12+ months: joining family meals', 'Four meals: soft chopped family foods. Keep salt and sugar low.'];
+    if (age < 10) return ['9 months: chopped foods & self-feeding', 'Four meals: finely chopped and mashed foods, soft finger foods your baby can pick up, a spoon to hold. Offer water in an open cup.'];
+    if (age < 12) return [`${age} months: more texture, more variety`, 'Four meals: soft pieces instead of purées, dal-rice, rotis, egg and fish or chicken (per your diet setting), and bigger portions. Milk feeds continue.'];
+    if (age < 15) return [`${age} months: joining family meals`, 'Four meals plus milk: soft family dishes cut small, with ruti, rice, dal, sabzi, egg, fish or chicken. Little or no added salt; no sugar or honey. Give whole milk or curd as part of the day.'];
+    if (age < 18) return [`${age} months: bite-size family food`, 'Four meals: the family menu, mildly spiced and cut to bite size. Let your child feed themselves, and offer new vegetables again and again. Skip hard raw chunks, whole nuts and whole grapes.'];
+    if (age < 22) return [`${age} months: richer, mixed meals`, 'Four meals: fuller dishes with grains, protein and vegetables on one plate, fish and chicken in curries, stuffed parathas, dosa and idli. Keep salt and sugar low and spice mild.'];
+    return [`${age} months: nearly the family table`, 'Four meals: family dishes with minimal salt and mild spice, cut small. Your toddler can eat the same dal, sabzi, fish or chicken and ruti or rice as everyone, with iron-rich foods every day.'];
   }
   function render() {
     renderAcct();

@@ -201,10 +201,12 @@
   add(100, 20, ['1/2 cup peeled lau (bottle gourd)'], [STEAM('the lau', 8), BLEND]);
 
   const NOTE = 'No salt, sugar or honey. Serve warm, never hot. Always sit with your baby while they eat.';
-  const TEXTURE = (m) => m >= 10 ? 'Texture: soft mash or small soft pieces.' : m >= 8 ? 'Texture: thick mash with soft lumps.' : 'Texture: smooth, thin purée at 6 to 7 months; thicken gradually.';
+  const NOTE_T = 'No added salt or sugar. Serve warm, never hot. Always sit with your child while they eat.';
+  const TEXTURE = (m) => m >= 18 ? 'Texture: bite-size pieces, close to family food.' : m >= 12 ? 'Texture: soft, small pieces (about the size of a pea to a fingertip).' : m >= 10 ? 'Texture: soft mash or small soft pieces.' : m >= 8 ? 'Texture: thick mash with soft lumps.' : 'Texture: smooth, thin purée at 6 to 7 months; thicken gradually.';
 
   function get(food) {
     if (!food) return null;
+    if (food.r) return { mins: food.r[0], makes: food.m >= 18 ? '1 toddler portion' : food.m >= 12 ? '1 small toddler portion' : '1 baby portion', ing: food.r[1], steps: food.r[2], note: TEXTURE(food.m) + ' ' + NOTE_T };
     const n = Number(String(food.id).replace('f', ''));
     const r = R[n];
     if (!r) return null;
