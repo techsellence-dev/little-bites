@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f4a5c">
+<meta name="theme-color" content="#e85c85">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Little Bites: daily weaning menu</title>
 <style>
-:root{--bg:#fdf8f1;--card:#fff;--ink:#0f3b4a;--mute:#5d7480;--brand:#e85c85;--brand-d:#c23c68;--line:#eadfd2;--soft:#e3f3ea;--green:#6fc8a8;--haldi:#f3dc62;--indigo:#3d4fa8;--teal:#0f4a5c;--teal2:#1a7580;--mint:#6fc8a8;--coral:#f46b72;--peri:#778fea;--peach:#f8d9c8;--r:24px;--shadow:0 2px 0 rgba(15,74,92,.05),0 10px 24px rgba(15,74,92,.08);--head:ui-rounded,"SF Pro Rounded","Nunito","Hind Siliguri",system-ui,sans-serif}
+:root{--bg:#fff6f3;--card:#fff;--ink:#3a2230;--mute:#7a6069;--brand:#e85c85;--brand-d:#c23c68;--line:#f2dcd6;--soft:#ffe6ed;--green:#6fc8a8;--haldi:#f3dc62;--indigo:#3d4fa8;--teal:#0f4a5c;--teal2:#1a7580;--mint:#6fc8a8;--coral:#f46b72;--peri:#778fea;--peach:#f8d9c8;--r:24px;--shadow:0 2px 0 rgba(160,40,80,.05),0 10px 24px rgba(160,40,80,.09);--berry:#9c2a55;--head:ui-rounded,"SF Pro Rounded","Nunito","Hind Siliguri",system-ui,sans-serif}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali","Noto Sans Devanagari",sans-serif;padding-bottom:84px}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -168,8 +168,8 @@ dialog::backdrop{background:rgba(8,40,52,.55)}
 .bg i:nth-child(6){left:24%;top:38%;width:44px;height:58px;background:var(--b1);--t:18s;--d:-5s}
 .bg i:nth-child(7){right:26%;top:50%;width:40px;height:52px;background:var(--b3);--t:21s;--d:-11s}
 .bg i:nth-child(8){left:60%;top:88%;width:50px;height:64px;background:var(--b2);--t:20s;--d:-7s}
-body{--b1:#bfe9dc;--b2:#f8d9c8;--b3:#fbe9a0;--b4:#d9e1fb;--b5:#f9c6d3}
-body[data-app=play]{--b1:#d9e1fb;--b2:#f9c6d3;--b3:#bfe9dc;--b4:#fbe9a0;--b5:#f8d9c8}
+body{--b1:#f9c6d3;--b2:#f8d9c8;--b3:#fbe9a0;--b4:#f6b3c6;--b5:#bfe9dc}
+body[data-app=play]{--b1:#f6b3c6;--b2:#d9e1fb;--b3:#f9c6d3;--b4:#bfe9dc;--b5:#fbe9a0}
 .bg i{transition:background 1.2s}
 @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(34px,-60px) scale(1.12)}}
 @keyframes sway{from{transform:translate(0,0) rotate(-18deg)}to{transform:translate(-30px,-70px) rotate(24deg)}}
@@ -180,6 +180,25 @@ body[data-app=play]{--b1:#d9e1fb;--b2:#f9c6d3;--b3:#bfe9dc;--b4:#fbe9a0;--b5:#f8
 .hero h1{animation:bob 4s ease-in-out infinite alternate}
 @keyframes bob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
 @media(prefers-reduced-motion:reduce){.bg i,.cloud,.crown,.hero h1{animation:none!important}}
+/* ---- pink first: teal and mint are the supporting colours ---- */
+header.top{background:linear-gradient(135deg,#ee6a92,#c23c68);box-shadow:0 2px 14px rgba(150,30,70,.3)}
+.hero{background:linear-gradient(180deg,#b8345f 0%,#e85c85 55%,#fbbccb 100%)}
+.hero h1{text-shadow:0 3px 0 #8a2350,0 6px 14px rgba(90,10,40,.35)}.hero p{color:#ffe9f0}
+.card h2,.stage b,.meal h3{color:var(--berry)}
+.card>h2::after{border-top-color:var(--teal2)}
+.stage{background:linear-gradient(135deg,#ffe3ec,#ffefd9)}
+.days button.on{background:var(--brand);border-color:var(--brand);box-shadow:0 3px 0 var(--brand-d)}.days button.on small{color:#ffe3ec}
+.weeks button.on{background:var(--brand-d);border-color:var(--brand-d)}
+.seg button.on,.bands button.on,table.week th.today{background:var(--brand);color:#fff}.bands button.on{border-color:var(--brand)}.bands button.on small{color:#ffe3ec}
+.days button.on small.rep,.weeks button small.rep{color:var(--brand-d)}.weeks button.on small.rep{color:#ffd1de}
+.chip{background:var(--soft);color:var(--brand-d)}
+.ex button{border-color:#f4a0b8;color:var(--berry)}
+.tabbar button.on{color:var(--berry)!important;box-shadow:inset 0 4px 0 var(--teal2)}
+.secondary{border-color:var(--teal2);color:var(--teal)}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid rgba(26,117,128,.55)}
+dialog::backdrop{background:rgba(70,15,40,.5)}
+.warnbox{background:#fff0ee}
+.tabbar{box-shadow:0 -4px 16px rgba(160,40,80,.12)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -194,16 +213,16 @@ body[data-app=play]{--b1:#d9e1fb;--b2:#f9c6d3;--b3:#bfe9dc;--b4:#fbe9a0;--b5:#f8
   <svg viewBox="0 0 800 168" preserveAspectRatio="xMidYMax slice" role="img" aria-label="">
     <defs><pattern id="dt" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.5" fill="#d3f1e6" opacity=".75"/></pattern><pattern id="dp" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.2" fill="#f8d9c8" opacity=".8"/></pattern></defs>
     <g class="cloud" style="--t:50s" fill="#fff8ec" opacity=".22"><ellipse cx="170" cy="34" rx="46" ry="12"/><ellipse cx="196" cy="26" rx="30" ry="12"/></g><g class="cloud" style="--t:70s;--d:-20s" fill="#fff8ec" opacity=".18"><ellipse cx="520" cy="46" rx="52" ry="12"/><ellipse cx="548" cy="37" rx="32" ry="12"/></g><circle cx="640" cy="40" r="60" fill="#f8d9c8" opacity=".12"/>
-    <path d="M0 120C90 96 170 104 260 118S430 100 520 112 700 98 800 116V168H0Z" fill="#2e9a95"/>
+    <path d="M0 120C90 96 170 104 260 118S430 100 520 112 700 98 800 116V168H0Z" fill="#f58aa5"/>
     <path d="M0 120C90 96 170 104 260 118S430 100 520 112 700 98 800 116V168H0Z" fill="url(#dt)" opacity=".5"/>
     <g stroke="#0c4559" stroke-width="3" stroke-linecap="round" fill="none"><path d="M120 120V70M120 96l-14-14M120 86l12-12"/><path d="M330 126V60M330 100l-16-16M330 88l14-14"/></g>
     <g class="crown"><circle cx="120" cy="58" r="34" fill="#17696f"/><circle cx="120" cy="58" r="34" fill="url(#dt)"/></g>
     <g class="crown" style="animation-delay:-2s"><circle cx="330" cy="50" r="40" fill="#5fbfae"/><circle cx="330" cy="50" r="40" fill="url(#dt)"/></g>
     <g><path d="M450 124l22-62 22 62Z" fill="#0f5a68"/><path d="M458 98l14-40 14 40Z" fill="#1a7580"/><path d="M505 124l18-50 18 50Z" fill="#2e9a95"/><path d="M560 126l24-70 24 70Z" fill="#0f5a68"/><path d="M570 100l14-44 14 44Z" fill="#6fc8a8"/></g>
     <g><rect x="640" y="92" width="62" height="40" rx="3" fill="#cfeee3"/><path d="M630 94l41-34 41 34Z" fill="#3d3a82"/><rect x="660" y="106" width="12" height="26" rx="6" fill="#1a7580"/><rect x="682" y="104" width="10" height="10" rx="2" fill="#f3dc62"/><rect x="694" y="52" width="8" height="16" fill="#f8d9c8"/></g>
-    <path d="M0 140C120 124 220 134 340 142S600 128 800 140V168H0Z" fill="#7fd0b8"/>
+    <path d="M0 140C120 124 220 134 340 142S600 128 800 140V168H0Z" fill="#fbb8c9"/>
     <path d="M0 140C120 124 220 134 340 142S600 128 800 140V168H0Z" fill="url(#dt)" opacity=".55"/>
-    <g fill="#f08aa6"><circle cx="60" cy="146" r="6"/><circle cx="220" cy="150" r="5"/><circle cx="410" cy="152" r="6"/><circle cx="610" cy="148" r="5"/><circle cx="760" cy="146" r="6"/></g>
+    <g fill="#fff8ec"><circle cx="60" cy="146" r="6"/><circle cx="220" cy="150" r="5"/><circle cx="410" cy="152" r="6"/><circle cx="610" cy="148" r="5"/><circle cx="760" cy="146" r="6"/></g>
     <g fill="#f3dc62"><circle cx="60" cy="146" r="2.2"/><circle cx="220" cy="150" r="2"/><circle cx="410" cy="152" r="2.2"/><circle cx="610" cy="148" r="2"/><circle cx="760" cy="146" r="2.2"/></g>
   </svg>
   <div class="words"><h1>Little bites, big growth</h1><p>Home-style meals and play for every month</p></div>
