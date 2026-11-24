@@ -148,14 +148,16 @@ async function callGemini(system, content, maxTokens = 1200) {
   });
   let r;
   const FALLBACK = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash';
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const model = attempt === 1 ? MODEL : FALLBACK; // overloaded primary: switch model
+  const CHAIN = [MODEL, FALLBACK, 'gemini-3-flash-preview', 'gemini-3.5-flash-lite'];
+  const hasVideo = parts.some((p) => p.fileData);
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const model = CHAIN[attempt - 1]; // overloaded model: try the next one
     try {
       r = await fetch(`${base}/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
         body: reqBody,
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(hasVideo ? 55000 : 30000),
       });
     } catch (e) {
       console.error(`[gemini] attempt ${attempt} failed: ${e.name}`);
@@ -163,7 +165,7 @@ async function callGemini(system, content, maxTokens = 1200) {
     }
     if (r && r.status !== 429 && r.status < 500) break;
     if (r) console.error(`[gemini] attempt ${attempt} got ${r.status}`);
-    if (attempt < 3) await new Promise((ok) => setTimeout(ok, 1500));
+    if (attempt < 4) await new Promise((ok) => setTimeout(ok, 1500 * attempt));
   }
   if (!r) return { status: 504, json: { error: 'timeout' } };
   if (!r.ok) {
@@ -313,7 +315,14 @@ async function route(req, res, url, send) {
     if (img) content.push({ type: 'image', source: { type: 'base64', media_type: img.type, data: img.data } });
     const fromLink = page ? [page.author && `Author: ${page.author}`, page.title && `Title: ${page.title}`, page.text].filter(Boolean).join('\n') : '';
     content.push({ type: 'text', text: `Baby: ${Number(ctx.ageMonths) || 'unknown'} months. Known allergies: ${clip(ctx.allergies, 200)}.\nVocabulary: ${clip(b.vocab, 6000)}\nCurrent rules (id and meaning): ${clip(b.rules, 3000)}\n${hist ? `<conversation>${hist}</conversation>\n` : ''}${fromLink ? `<shared_post>${strip(fromLink)}</shared_post>\n` : ''}${img ? '(A screenshot is attached.)\n' : ''}${page && page.videoUrl ? '(The linked video is attached.)\n' : ''}${linkNote}\n<caregiver_message>${strip(text) || '(no text, see attachment)'}</caregiver_message>` });
-    const out = await callGemini(CHAT_SYSTEM, content, 2600);
+    let out = await callGemini(CHAT_SYSTEM, content, 2600);
+    if (out.status !== 200 && content.some((c) => c.type === 'video')) {
+      // video analysis is the heaviest request; fall back to the page title and description alone
+      const rest = content.filter((c) => c.type !== 'video');
+      const last = rest[rest.length - 1];
+      rest[rest.length - 1] = { type: 'text', text: last.text + '\n(The linked video could not be watched right now. Work from its title and description only, and say so in your reply.)' };
+      out = await callGemini(CHAT_SYSTEM, rest, 2600);
+    }
     if (out.status === 200 && page) out.json.source = { url: page.url, host: page.host, title: page.title, author: page.author };
     return send(out.status, out.json);
   }
