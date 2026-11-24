@@ -143,7 +143,7 @@ async function callGemini(system, content, maxTokens = 1200) {
     generationConfig: { maxOutputTokens: maxTokens * 4, temperature: 0.2, responseMimeType: 'application/json' },
   });
   let r;
-  const FALLBACK = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
+  const FALLBACK = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash';
   for (let attempt = 1; attempt <= 3; attempt++) {
     const model = attempt === 1 ? MODEL : FALLBACK; // overloaded primary: switch model
     try {
