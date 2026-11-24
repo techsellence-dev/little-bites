@@ -199,6 +199,35 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 dialog::backdrop{background:rgba(70,15,40,.5)}
 .warnbox{background:#fff0ee}
 .tabbar{box-shadow:0 -4px 16px rgba(160,40,80,.12)}
+/* ---- chat ---- */
+.chatlog{display:flex;flex-direction:column;gap:10px;max-height:min(52vh,460px);min-height:150px;overflow-y:auto;padding:6px 2px 8px;margin-top:6px;scroll-behavior:smooth}
+.msg{display:flex}.msg.me{justify-content:flex-end}
+.bub{max-width:88%;padding:10px 13px;border-radius:20px;font-size:.93rem;line-height:1.45;overflow-wrap:anywhere}
+.msg.bot .bub{background:#fff;border:2px solid var(--line);border-bottom-left-radius:6px}
+.msg.me .bub{background:var(--brand);color:#fff;border-bottom-right-radius:6px}
+.msg.bot.err .bub{background:#fff3d9;border-color:#f3dc62}
+.bub .saved-list{margin:8px 0 0;padding:8px 10px;border-radius:14px;background:var(--soft);font-size:.88rem}
+.bub .saved-list b{display:block;color:var(--brand-d);margin-bottom:2px}
+.bub .saved-list div{padding:1px 0}
+.bub .rev{margin-top:8px;padding:8px 10px;border-radius:14px;background:#fff3d9;font-size:.88rem}
+.bub .rev .cw{display:block;margin:2px 0 6px}
+.bub .rev button,.bub .undo{border:2px solid var(--teal2);background:#fff;color:var(--teal);border-radius:999px;padding:3px 12px;font-weight:700;font-size:.82rem}
+.bub .undo{margin-top:8px}
+.bub .tip{margin-top:6px}
+.typing i{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:var(--brand);opacity:.4;animation:dot 1s ease-in-out infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{50%{opacity:1;transform:translateY(-3px)}}
+.composer{display:flex;gap:8px;align-items:flex-end;margin-top:8px}
+.composer textarea{min-height:44px;max-height:140px;margin:0;border-radius:22px;padding:11px 16px;resize:none;flex:1;background:#fff}
+.attach{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;color:var(--teal2);cursor:pointer;margin:0}
+.attach:hover{background:var(--soft)}
+.send{width:auto;margin:0;flex:none;padding:11px 20px}
+.attached[hidden]{display:none!important}
+.attached{display:flex;gap:10px;align-items:center;font-size:.85rem;color:var(--teal);margin-top:6px}
+.chatcard .ex{margin:2px 0 4px}
+details.saved{margin-top:12px;border-top:2px dotted var(--line);padding-top:8px}
+details.saved summary{cursor:pointer;font-weight:700;color:var(--berry)}
+@media(prefers-reduced-motion:reduce){.typing i{animation:none}.chatlog{scroll-behavior:auto}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -239,40 +268,24 @@ dialog::backdrop{background:rgba(70,15,40,.5)}
   </section>
 
   <aside id="customPane">
-    <div class="card">
-      <h2>Customise the menu</h2>
-      <div class="tip">Tell me in your own words: English, বাংলা or हिन्दी.</div>
-      <textarea id="ask" placeholder="e.g. No dairy for now. Ragi twice a week. Only fruit on Sundays. সপ্তাহে তিনদিন মাছ দিন। रविवार को सिर्फ फल।"></textarea>
-      <div class="ex" id="examples"></div>
-      <button class="primary" id="go">Update menu</button>
-      <div id="reply"></div>
-    </div>
-
-    <div class="card">
-      <h2>Add guidance from a post</h2>
-      <div class="tip">Paste a link to a public post, paste the caption (any language), or upload a screenshot. I'll pull out the feeding advice and you choose what to apply.</div>
-      <label for="postSource">Who posted it? (optional)</label>
-      <input type="text" id="postSource" maxlength="60" placeholder="@handle or page name">
-      <label for="postLink">Link to a public post</label>
-      <input type="url" id="postLink" maxlength="500" placeholder="https://youtube.com/…  or a blog / TikTok link">
-      <div class="tip">Works with YouTube, TikTok and blogs. Instagram, Facebook and X often need a login, so paste the caption or a screenshot for those.</div>
-      <label for="postText">Post text</label>
-      <textarea id="postText" placeholder="Paste caption here…"></textarea>
-      <label for="postImg">or screenshot</label>
-      <input type="file" id="postImg" accept="image/*">
-      <button class="secondary" id="readPost">Read post</button>
-      <div id="postResult"></div>
-    </div>
-
-    <div class="card">
-      <h2>Your rules</h2>
-      <ul class="rules" id="rules"></ul>
-      <button class="link" id="resetAll">Reset to default menu</button>
-    </div>
-
-    <div class="card" id="postsCard" style="display:none">
-      <h2>Saved guidance</h2>
-      <ul class="rules" id="posts"></ul>
+    <div class="card chatcard">
+      <h2>Chat with Little Bites</h2>
+      <div class="tip">Ask for any menu change, or share a post. I'll work out the rules and save them.</div>
+      <div class="chatlog" id="chatLog" aria-live="polite"></div>
+      <div class="attached" id="chatChip" hidden><span>Screenshot attached</span><button type="button" class="link" id="chatClearImg">Remove</button></div>
+      <form class="composer" id="chatForm">
+        <label class="attach" for="chatImg" title="Attach a screenshot" aria-label="Attach a screenshot"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l9-9a3.7 3.7 0 0 1 5.2 5.2l-9 9a1.8 1.8 0 0 1-2.6-2.6l8.3-8.3"/></svg></label>
+        <input type="file" id="chatImg" accept="image/*" hidden>
+        <textarea id="chatIn" rows="1" maxlength="6000" placeholder="e.g. No dairy for now, or paste a post link or caption…" aria-label="Message"></textarea>
+        <button class="primary send" id="chatSend" type="submit" aria-label="Send">Send</button>
+      </form>
+      <div class="tip">Works with YouTube, TikTok and blog links. Instagram, Facebook and X often need a login, so paste the caption or attach a screenshot for those. English, বাংলা and हिन्दी all work.</div>
+      <details class="saved" id="savedBox">
+        <summary id="savedSum">Saved rules</summary>
+        <ul class="rules" id="rules"></ul>
+        <ul class="rules" id="posts"></ul>
+        <button class="link" id="resetAll">Reset to default menu</button>
+      </details>
     </div>
   </aside>
   <section id="groceryPane">
@@ -312,7 +325,7 @@ dialog::backdrop{background:rgba(70,15,40,.5)}
 <nav class="tabbar">
   <button data-tab="menu" class="on">Menu</button>
   <button data-tab="grocery">Grocery</button>
-  <button data-tab="custom">Customise</button>
+  <button data-tab="custom">Chat</button>
 </nav>
 
 <dialog id="setup">

@@ -5,11 +5,11 @@
   const TIMES = { breakfast: '8:00', lunch: '12:30', snack: '4:00', dinner: '7:00' };
   const EXAMPLES = ['No dairy for now', 'Ragi twice a week', 'Only fruit on Sundays', 'Iron-rich food 5 days a week', 'সপ্তাহে তিনদিন মাছ', 'No dinner on Saturday'];
 
-  const fresh = () => ({ profile: null, rules: [], swaps: {}, posts: [], prefs: { bn: true }, groceryDone: {}, done: {}, hide: {}, play: [], playPosts: [], updatedAt: 0 });
+  const fresh = () => ({ profile: null, rules: [], swaps: {}, posts: [], chat: [], prefs: { bn: true }, groceryDone: {}, done: {}, hide: {}, play: [], playPosts: [], updatedAt: 0 });
   const normalize = (s) => ({ ...fresh(), ...(s || {}), prefs: { bn: true, ...((s && s.prefs) || {}) } });
   let state = fresh();
   let ui = { day: todayKey(), view: 'day', week: 0, gro: 1 };
-  let account = null, syncTimer = null, pending = null, resetToken = null, acctView = 'out';
+  let account = null, syncTimer = null, resetToken = null, acctView = 'out';
 
   // On-device copy lives in IndexedDB (see store.js) so the PWA works fully offline.
   async function loadState() {
@@ -129,12 +129,6 @@
     const s = (k) => [...new Set(FOODS.flatMap(k))].sort();
     return { ingredients: s((f) => f.ing), categories: s((f) => [f.cat]), nutrients: s((f) => f.nut), allergens: s((f) => f.a), dishes: FOODS.map((f) => f.n) };
   }
-  async function parseInstruction(text) {
-    const r = await api('/api/parse', { method: 'POST', body: JSON.stringify({ text, vocab: vocab(), rules: state.rules.map((x) => ({ id: x.id, summary: describe(x) })) }) });
-    if (r.ok) return { ...r.json, source: 'ai' };
-    if (r.status === 429) return { add: [], reply: 'Too many requests this hour. Please try again later.', source: 'limit' };
-    return { ...localParse(text), source: 'offline' };
-  }
   const NUM = { once: 1, one: 1, twice: 2, two: 2, thrice: 3, three: 3, four: 4, five: 5, six: 6 };
   function localParse(text) {
     const t = text.toLowerCase();
@@ -163,26 +157,6 @@
     return { add, remove: [], reply: add.length ? 'Done (offline mode: English, simple phrasing only).' : "I couldn't understand that offline. Try 'no paneer', 'ragi twice a week' or 'only fruit on Sunday'. Bengali and Hindi need the online connection.", notes: [] };
   }
 
-  async function applyInstruction() {
-    const text = $('ask').value.trim();
-    if (!text) return;
-    $('go').disabled = true; $('go').textContent = 'Working…';
-    const res = await parseInstruction(text);
-    $('go').disabled = false; $('go').textContent = 'Update menu';
-    const removeIds = Array.isArray(res.remove) ? res.remove : [];
-    const before = state.rules.length;
-    state.rules = state.rules.filter((r) => !removeIds.includes(r.id));
-    const removed = before - state.rules.length;
-    const added = (Array.isArray(res.add) ? res.add : []).map((r) => cleanRule(r)).filter(Boolean);
-    state.rules.push(...added);
-    if (added.length || removed) { $('ask').value = ''; touch(); }
-    const notes = (Array.isArray(res.notes) ? res.notes : []).map(String);
-    const changed = added.map((r) => '+ ' + describe(r)).concat(removed ? [`Removed ${removed} earlier rule(s)`] : []);
-    $('reply').innerHTML = `<div class="reply">${esc(String(res.reply || ''))}${changed.length ? '<br>' + changed.map(esc).join('<br>') : ''}${notes.length ? '<br><i>' + notes.map(esc).join(' ') + '</i>' : ''}</div>`;
-    render();
-    if (added.length && window.matchMedia('(max-width:899px)').matches) setTimeout(() => setTab('menu'), 1400);
-  }
-
   // ---------- influencer post guidance ----------
   function shrinkImage(file) {
     return new Promise((resolve, reject) => {
@@ -198,40 +172,99 @@
     });
   }
   const errText = (r) => r.status === 503 ? 'Reading posts needs the AI connection, which is not set up on this server.' : r.status === 429 ? 'Too many requests this hour. Please try again later.' : (r.json && r.json.error === 'upstream' && (r.json.detail === 401 || r.json.detail === 403)) ? 'Reading posts is unavailable: the server\'s Gemini API key was rejected. The site owner needs to update GEMINI_API_KEY.' : (r.json && r.json.error === 'bad_url') ? 'That does not look like a public link. Paste the full address (https://...) of a public post.' : (r.json && (r.json.error === 'unreadable' || r.json.error === 'fetch_failed' || r.json.error === 'timeout')) ? 'I could not read that link. Instagram, Facebook and X often hide posts behind a login. Paste the caption or upload a screenshot instead.' : 'Could not read the post. Please try again.';
-  async function readPost() {
-    const text = $('postText').value.trim(), file = $('postImg').files[0], link = $('postLink').value.trim();
-    if (!text && !file && !link) { $('postResult').innerHTML = '<div class="reply warn">Paste a link, paste the caption, or choose a screenshot first.</div>'; return; }
-    const btn = $('readPost'); btn.disabled = true; btn.textContent = 'Reading…';
-    let image = null;
-    try { if (file) image = await shrinkImage(file); } catch (_) { btn.disabled = false; btn.textContent = 'Read post'; $('postResult').innerHTML = '<div class="reply warn">Could not read that image. Try a PNG or JPG.</div>'; return; }
-    const r = await api('/api/guidance', { method: 'POST', body: JSON.stringify({ text, image, url: link, vocab: vocab(), context: { ageMonths: current ? current.age : 6, allergies: (state.profile && state.profile.allergies) || [] } }) });
-    btn.disabled = false; btn.textContent = 'Read post';
-    if (!r.ok) {
-      const m = errText(r);
-      $('postResult').innerHTML = `<div class="reply warn">${esc(m)}</div>`; return;
+  // ---------- chat: menu instructions and shared posts, one conversation ----------
+  const chat = { image: null, busy: false };
+  const CHAT_CAP = 40;
+  const addMsg = (m) => { state.chat = (state.chat || []).concat(m).slice(-CHAT_CAP); };
+  const clip = (v, n) => String(v == null ? '' : v).replace(/[<>]/g, '').trim().slice(0, n);
+  function msgHtml(m, i) {
+    if (m.role === 'user') return `<div class="msg me"><div class="bub">${esc(m.text)}${m.img ? '<div class="tip" style="color:#ffe3ec">Screenshot attached</div>' : ''}</div></div>`;
+    let h = esc(m.text).replace(/\n/g, '<br>');
+    const changes = (m.savedText || []).map((t) => '<div>+ ' + esc(t) + '</div>').concat((m.removedText || []).map((t) => '<div>− ' + esc(t) + '</div>'));
+    if (m.undone) h += '<div class="tip">Undone. Nothing from this message is saved.</div>';
+    else if (changes.length) {
+      h += `<div class="saved-list"><b>Saved to your menu</b>${changes.join('')}</div>`;
+      h += `<button class="undo" data-undo="${i}">Undo</button> <button class="link" data-tab="menu">View menu</button>`;
     }
-    const g = r.json;
-    const src = g.source && /^https?:\/\//.test(g.source.url || '') ? g.source : null;
-    pending = { source: $('postSource').value.trim().slice(0, 60) || (src ? (src.author || src.host) : ''), link: src ? src.url.slice(0, 300) : '', g, rules: (Array.isArray(g.suggestions) ? g.suggestions : []).slice(0, 8).map((s) => ({ rule: cleanRule(s.rule), why: String(s.why || ''), caution: s.caution ? String(s.caution) : '' })).filter((s) => s.rule) };
-    renderPending();
+    (m.review || []).forEach((s, j) => {
+      h += `<div class="rev"><b>${esc(describe(s.rule))}</b>${s.why ? `<br><span class="tip">${esc(s.why)}</span>` : ''}${s.caution ? `<span class="cw">${esc(s.caution)}</span>` : ''}` +
+        (s.added ? '<div class="tip">Added.</div>' : m.undone ? '' : `<button data-addrev="${i}:${j}">Add anyway</button>`) + '</div>';
+    });
+    if ((m.notes || []).length) h += `<div class="tip"><i>${m.notes.map(esc).join(' ')}</i></div>`;
+    if (m.link) h += `<div class="tip"><a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">Source link</a></div>`;
+    return `<div class="msg bot${m.error ? ' err' : ''}"><div class="bub">${h}</div></div>`;
   }
-  function renderPending() {
-    const g = pending.g, el = $('postResult');
-    if (g.not_applicable && !pending.rules.length) { el.innerHTML = `<div class="reply warn">${esc(String(g.not_applicable))}</div>`; pending = null; return; }
-    const cautions = (Array.isArray(g.cautions) ? g.cautions : []).map(String);
-    el.innerHTML = `<div class="reply"><b>${esc(String(g.language || ''))}</b><br>${esc(String(g.summary_en || ''))}${g.summary_original ? `<br><i>${esc(String(g.summary_original))}</i>` : ''}</div>` +
-      (cautions.length ? `<div class="reply warn"><b>Check with your paediatrician:</b><br>${cautions.map(esc).join('<br>')}</div>` : '') +
-      (pending.rules.length ? `<div style="margin-top:8px">${pending.rules.map((s, i) => `<label class="sug"><input type="checkbox" data-sug="${i}" ${s.caution ? '' : 'checked'}><span><b>${esc(describe(s.rule))}</b><br><span class="tip">${esc(s.why)}</span>${s.caution ? `<br><span class="cw">${esc(s.caution)}</span>` : ''}</span></label>`).join('')}</div>
-        <button class="primary" id="applyPost">Add selected to my menu</button><button class="link" id="discardPost" style="margin-top:6px">Discard</button>` : '<div class="tip" style="margin-top:8px">No menu rules found in this post. You can still save the summary.</div><button class="secondary" id="applyPost">Save summary</button>');
+  function renderChat(typing) {
+    const log = $('chatLog'); if (!log) return;
+    const msgs = state.chat || [];
+    const hello = `<div class="msg bot"><div class="bub">Hi! Tell me how you'd like the menu to change, in English, বাংলা or हिन्दी. You can also paste a link to a post, paste its caption or attach a screenshot. I'll work out what it means for your baby and save the rules.</div></div><div class="ex" id="examples">${EXAMPLES.map((x) => `<button data-ex="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
+    log.innerHTML = (msgs.length ? msgs.map(msgHtml).join('') : hello) + (typing ? '<div class="msg bot"><div class="bub typing" aria-label="Thinking"><i></i><i></i><i></i></div></div>' : '');
+    log.scrollTop = log.scrollHeight;
   }
-  function applyPost() {
-    const g = pending.g, id = uid();
-    const picked = [...document.querySelectorAll('#postResult [data-sug]:checked')].map((c) => pending.rules[+c.dataset.sug].rule);
-    picked.forEach((r) => { r.post = id; state.rules.push(r); });
-    state.posts.unshift({ id, source: pending.source || 'Saved post', language: String(g.language || ''), summary: String(g.summary_en || '').slice(0, 600), date: new Date().toISOString().slice(0, 10), rules: picked.length, ...(pending.link ? { link: pending.link } : {}) });
-    pending = null; $('postResult').innerHTML = `<div class="reply">Saved. ${picked.length} rule(s) added to your menu.</div>`;
-    $('postText').value = ''; $('postImg').value = ''; $('postSource').value = ''; $('postLink').value = '';
-    touch(); render();
+  function ensurePost(m) {
+    if (m.postId || !m.post) return m.postId;
+    m.postId = uid();
+    state.posts.unshift({ id: m.postId, source: m.post.source, language: m.post.language, summary: m.post.summary, date: new Date().toISOString().slice(0, 10), rules: 0, ...(m.link ? { link: m.link } : {}) });
+    return m.postId;
+  }
+  function undoMsg(i) {
+    const m = (state.chat || [])[i]; if (!m || m.undone) return;
+    const ids = m.saved || [];
+    state.rules = state.rules.filter((r) => !ids.includes(r.id)).concat(m.removed || []);
+    if (m.postId && !state.rules.some((r) => r.post === m.postId)) state.posts = state.posts.filter((p) => p.id !== m.postId);
+    m.undone = true; touch(); render(); renderChat();
+  }
+  function addReview(i, j) {
+    const m = (state.chat || [])[i], s = m && m.review && m.review[j]; if (!s || s.added) return;
+    const pid = ensurePost(m);
+    const r = { ...s.rule, id: uid() }; if (pid) { r.post = pid; const p = state.posts.find((x) => x.id === pid); if (p) p.rules++; }
+    state.rules.push(r); s.added = true; (m.saved = m.saved || []).push(r.id); (m.savedText = m.savedText || []).push(describe(r));
+    touch(); render(); renderChat();
+  }
+  async function sendChat() {
+    if (chat.busy) return;
+    const text = $('chatIn').value.trim(), image = chat.image;
+    if (!text && !image) return;
+    chat.busy = true; $('chatSend').disabled = true;
+    const history = (state.chat || []).filter((m) => !m.error).slice(-8).map((m) => ({ role: m.role, text: m.text }));
+    addMsg({ role: 'user', text, img: !!image });
+    $('chatIn').value = ''; $('chatIn').style.height = ''; chat.image = null; $('chatChip').hidden = true; $('chatImg').value = '';
+    renderChat(true);
+    const r = await api('/api/chat', { method: 'POST', body: JSON.stringify({ text, image, history, vocab: vocab(), rules: state.rules.map((x) => ({ id: x.id, summary: describe(x) })), context: { ageMonths: current ? current.age : 6, allergies: (state.profile && state.profile.allergies) || [] } }) });
+    let m;
+    if (r.ok) m = interpret(r.json);
+    else if ((r.status === 0 || r.status === 503) && !image && !/https?:\/\//i.test(text)) {
+      const local = localParse(text), added = local.add.map((x) => cleanRule(x)).filter(Boolean);
+      state.rules.push(...added);
+      m = { role: 'bot', text: local.reply, saved: added.map((x) => x.id), savedText: added.map(describe), removed: [], removedText: [] };
+    } else m = { role: 'bot', error: true, text: chatErr(r) };
+    addMsg(m); touch(); render(); renderChat();
+    chat.busy = false; $('chatSend').disabled = false;
+  }
+  function chatErr(r) {
+    const e = r.json && r.json.error;
+    if (r.status === 503) return 'The chat needs the AI connection, which is not set up on this server.';
+    if (r.status === 429) return 'Too many requests this hour. Please try again later.';
+    if (e === 'upstream' && (r.json.detail === 401 || r.json.detail === 403)) return 'The chat is unavailable: the server\'s Gemini API key was rejected. The site owner needs to update GEMINI_API_KEY.';
+    if (e === 'bad_url') return 'That does not look like a public link. Paste the full address (https://...) of a public post.';
+    if (e === 'unreadable' || e === 'fetch_failed' || e === 'timeout') return 'I could not read that link. Instagram, Facebook and X often hide posts behind a login. Paste the caption or attach a screenshot instead.';
+    if (e === 'bad_image') return 'I could not use that image. Try a PNG or JPG.';
+    return 'Something went wrong. Please try again.';
+  }
+  function interpret(res) {
+    const removeIds = (Array.isArray(res.remove) ? res.remove : []).filter((x) => typeof x === 'string');
+    const removed = state.rules.filter((x) => removeIds.includes(x.id));
+    state.rules = state.rules.filter((x) => !removeIds.includes(x.id));
+    const added = (Array.isArray(res.add) ? res.add : []).slice(0, 8).map((x) => cleanRule(x)).filter(Boolean);
+    const g = res.post && typeof res.post === 'object' ? res.post : null;
+    const src = res.source && /^https?:\/\//.test(res.source.url || '') ? res.source : null;
+    const m = { role: 'bot', text: String(res.reply || '').slice(0, 900) || 'Done.', saved: [], savedText: [], removed, removedText: removed.map(describe), notes: (Array.isArray(res.notes) ? res.notes : []).slice(0, 4).map((x) => String(x).slice(0, 300)), review: [] };
+    if (g) { m.post = { source: clip(g.source || (src && (src.author || src.host)) || 'Saved post', 60), language: clip(g.language, 40), summary: clip(g.summary_en, 600) }; if (src) m.link = src.url.slice(0, 300); }
+    if (g && added.length) { const pid = ensurePost(m); added.forEach((x) => { x.post = pid; }); state.posts[0].rules = added.length; }
+    state.rules.push(...added);
+    m.saved = added.map((x) => x.id); m.savedText = added.map(describe);
+    m.review = (Array.isArray(res.review) ? res.review : []).slice(0, 8).map((s) => ({ rule: cleanRule(s && s.rule), why: clip(s && s.why, 300), caution: clip(s && s.caution, 300) })).filter((s) => s.rule);
+    return m;
   }
 
   // ---------- rendering ----------
@@ -277,12 +310,15 @@
     $('days').innerHTML = DAYS.map((d) => `<button data-d="${d}" class="${d === ui.day ? 'on' : ''}">${DAY_NAMES[d].slice(0, 3)}<small>${ui.week === 0 && d === todayKey() ? 'today' : fmtDay(dayDate(w, d))}</small></button>`).join('');
     $('menu').innerHTML = (ui.view === 'day' ? dayView(w, all) : weekView(w, all)) +
       (w.warnings.length ? `<div class="reply warn">${w.warnings.map(esc).join('<br>')}</div>` : '');
+    renderSaved();
+    renderGrocery(all);
+  }
+  function renderSaved() {
     const postName = (id) => { const x = state.posts.find((q) => q.id === id); return x ? x.source : ''; };
+    $('savedSum').textContent = `Saved rules${state.rules.length ? ` (${state.rules.length})` : ''}`;
     $('rules').innerHTML = state.rules.length
       ? state.rules.map((r) => `<li><span>${esc(describe(r))}${r.post ? `<small>from ${esc(postName(r.post))}</small>` : ''}</span><button data-del="${r.id}" aria-label="Remove rule">×</button></li>`).join('')
       : '<li class="empty">No custom rules yet. Showing the default menu.</li>';
-    renderGrocery(all);
-    $('postsCard').style.display = state.posts.length ? '' : 'none';
     $('posts').innerHTML = state.posts.map((x) => `<li><span><b>${esc(x.source)}</b> <small>${esc(x.language)} · ${esc(x.date)} · ${x.rules} rule(s)</small>${esc(x.summary)}</span><button data-delpost="${x.id}" aria-label="Remove post and its rules">×</button></li>`).join('');
   }
   // ---------- grocery list ----------
@@ -395,23 +431,27 @@
     else if (b.dataset.v) { ui.view = b.dataset.v; render(); }
     else if (b.dataset.go) { ui.day = b.dataset.go; ui.view = 'day'; render(); }
     else if (b.dataset.swap) swap(b.dataset.swap);
-    else if (b.dataset.del) { state.rules = state.rules.filter((r) => r.id !== b.dataset.del); touch(); render(); }
-    else if (b.dataset.delpost) { state.rules = state.rules.filter((r) => r.post !== b.dataset.delpost); state.posts = state.posts.filter((p) => p.id !== b.dataset.delpost); touch(); render(); }
+    else if (b.dataset.del) { state.rules = state.rules.filter((r) => r.id !== b.dataset.del); touch(); render(); renderChat(); }
+    else if (b.dataset.delpost) { state.rules = state.rules.filter((r) => r.post !== b.dataset.delpost); state.posts = state.posts.filter((p) => p.id !== b.dataset.delpost); touch(); render(); renderChat(); }
     else if (b.dataset.tab) setTab(b.dataset.tab);
-    else if (b.dataset.ex) { $('ask').value = b.dataset.ex; $('ask').focus(); }
+    else if (b.dataset.ex) { $('chatIn').value = b.dataset.ex; $('chatIn').focus(); }
+    else if (b.dataset.undo) undoMsg(+b.dataset.undo);
+    else if (b.dataset.addrev) { const [i, j] = b.dataset.addrev.split(':').map(Number); addReview(i, j); }
     else if (b.dataset.acct) { showAcct(b.dataset.acct); }
     else if (b.id === 'aResend') { api('/api/verify/resend', { method: 'POST', body: '{}' }).then((r) => { $('aVerified').textContent = r.ok ? 'Verification email sent. Check your inbox.' : ACCT_ERR[r.json.error] || 'Could not send. Try again later.'; }); }
-    else if (b.id === 'applyPost') applyPost();
-    else if (b.id === 'discardPost') { pending = null; $('postResult').innerHTML = ''; }
   });
   document.querySelectorAll('.appsw button').forEach((b) => b.addEventListener('click', () => {
     document.body.dataset.app = b.dataset.app; document.querySelectorAll('.appsw button').forEach((x) => x.classList.toggle('on', x === b)); scrollTo(0, 0); Play.render();
   }));
   Play.init({ $, esc, uid, api, touch, state: () => state, age: () => Engine.profileAge(state.profile), shrink: shrinkImage, errText });
-  $('examples').innerHTML = EXAMPLES.map((x) => `<button data-ex="${esc(x)}">${esc(x)}</button>`).join('');
-  $('go').addEventListener('click', applyInstruction);
-  $('readPost').addEventListener('click', readPost);
-  $('ask').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) applyInstruction(); });
+  $('chatForm').addEventListener('submit', (e) => { e.preventDefault(); sendChat(); });
+  $('chatIn').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendChat(); } });
+  $('chatIn').addEventListener('input', (e) => { const t = e.target; t.style.height = 'auto'; t.style.height = Math.min(140, t.scrollHeight) + 'px'; });
+  $('chatImg').addEventListener('change', async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { chat.image = await shrinkImage(f); $('chatChip').hidden = false; } catch (_) { chat.image = null; e.target.value = ''; addMsg({ role: 'bot', error: true, text: chatErr({ json: { error: 'bad_image' } }) }); renderChat(); }
+  });
+  $('chatClearImg').addEventListener('click', () => { chat.image = null; $('chatImg').value = ''; $('chatChip').hidden = true; });
   $('settingsBtn').addEventListener('click', openSetup);
   $('acctBtn').addEventListener('click', () => { acctView = 'out'; renderAcct(); $('aErr').textContent = ''; $('aErr').style.color = ''; $('account').showModal(); });
   $('aForgot').addEventListener('click', () => { showAcct('forgot'); $('fMsg').textContent = ''; $('fMsg').style.color = ''; $('fEmail').value = $('aEmail').value; });
@@ -443,7 +483,7 @@
     if (!confirm('Delete your account and the synced copy of your data? This device keeps its local copy.')) return;
     await api('/api/account', { method: 'DELETE' }); account = null; renderAcct(); $('account').close();
   });
-  $('resetAll').addEventListener('click', () => { if (confirm('Remove all rules and swaps?')) { state.rules = []; state.swaps = {}; $('reply').innerHTML = ''; touch(); render(); } });
+  $('resetAll').addEventListener('click', () => { if (confirm('Remove all rules and swaps?')) { state.rules = []; state.swaps = {}; touch(); render(); renderChat(); } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pull(); });
   window.addEventListener('online', pull);
 
@@ -453,7 +493,7 @@
     const me = await api('/api/me');
     if (me.ok) { account = { email: me.json.email, verified: !!me.json.verified }; renderAcct(); await pull(); }
     const hasLink = /^#(reset|verify)=/.test(location.hash);
-    if (state.profile) render(); else if (!hasLink) openSetup();
+    renderChat(); if (state.profile) render(); else if (!hasLink) openSetup();
     renderAcct();
     await handleLink();
   })();
