@@ -7,6 +7,7 @@ The demo is the static frontend only. Menus, grocery lists and swaps work and ar
 
 ## Features
 - **4-week menu, 4 meals a day**: 102 mild, age-staged dishes (khichuri, dal-bhaat, rui maachher jhol, chhana, fruit purées…) with Bengali-script names. No added salt, sugar or honey, boneless fish, no posto. The menu repeats every 4 weeks and is scrollable across weeks.
+- **Recipes**: every dish has a **Recipe** button (ingredients, method, baby-safe notes) from `public/recipes.js`. In the chat, ask for any recipe, or share a post: if the post contains a recipe it is copied as written (with a baby-safety note if needed), otherwise a baby-safe one is written. Saved recipes live under *Saved recipes* and show up on the matching menu dish.
 - **Age-aware**: pick the baby's age (6, 7, 8, 9–11, 12+ months), or follow the date of birth and let the menu advance on its own. The menu rebuilds whenever the age changes.
 - **Grocery list**: built from the menu for one week, two weeks or a month, grouped by aisle, with copy, download and tick-off.
 - **Swaps and chat**: swap any meal, or tell the **Chat** assistant how to change the menu in plain language (English, বাংলা, हिन्दी): "no dairy", "ragi twice a week", "only fruit on Sundays". Rules are saved automatically with an Undo button, and listed (removable) under *Saved rules* in the chat.

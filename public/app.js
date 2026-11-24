@@ -3,9 +3,9 @@
   const $ = (id) => document.getElementById(id);
   const ALLERGENS = ['dairy', 'egg', 'gluten', 'nuts', 'fish'];
   const TIMES = { breakfast: '8:00', lunch: '12:30', snack: '4:00', dinner: '7:00' };
-  const EXAMPLES = ['No dairy for now', 'Ragi twice a week', 'Only fruit on Sundays', 'Iron-rich food 5 days a week', 'সপ্তাহে তিনদিন মাছ', 'No dinner on Saturday'];
+  const EXAMPLES = ['No dairy for now', 'Ragi twice a week', 'Only fruit on Sundays', 'Iron-rich food 5 days a week', 'সপ্তাহে তিনদিন মাছ', 'No dinner on Saturday', 'Recipe for ragi porridge'];
 
-  const fresh = () => ({ profile: null, rules: [], swaps: {}, posts: [], chat: [], prefs: { bn: true }, groceryDone: {}, done: {}, hide: {}, play: [], playPosts: [], updatedAt: 0 });
+  const fresh = () => ({ profile: null, rules: [], swaps: {}, posts: [], chat: [], recipes: [], prefs: { bn: true }, groceryDone: {}, done: {}, hide: {}, play: [], playPosts: [], updatedAt: 0 });
   const normalize = (s) => ({ ...fresh(), ...(s || {}), prefs: { bn: true, ...((s && s.prefs) || {}) } });
   let state = fresh();
   let ui = { day: todayKey(), view: 'day', week: 0, gro: 1 };
@@ -180,10 +180,10 @@
   function msgHtml(m, i) {
     if (m.role === 'user') return `<div class="msg me"><div class="bub">${esc(m.text)}${m.img ? '<div class="tip" style="color:#ffe3ec">Screenshot attached</div>' : ''}</div></div>`;
     let h = esc(m.text).replace(/\n/g, '<br>');
-    const changes = (m.savedText || []).map((t) => '<div>+ ' + esc(t) + '</div>').concat((m.removedText || []).map((t) => '<div>− ' + esc(t) + '</div>'));
+    const changes = (m.savedText || []).map((t) => '<div>+ ' + esc(t) + '</div>').concat((m.removedText || []).map((t) => '<div>− ' + esc(t) + '</div>')).concat((m.recipes || []).map((id, k) => `<div>Recipe: <button class="link" data-myrecipe="${id}">${esc(m.recipeText[k])}</button></div>`));
     if (m.undone) h += '<div class="tip">Undone. Nothing from this message is saved.</div>';
     else if (changes.length) {
-      h += `<div class="saved-list"><b>Saved to your menu</b>${changes.join('')}</div>`;
+      h += `<div class="saved-list"><b>Saved</b>${changes.join('')}</div>`;
       h += `<button class="undo" data-undo="${i}">Undo</button> <button class="link" data-tab="menu">View menu</button>`;
     }
     (m.review || []).forEach((s, j) => {
@@ -211,7 +211,8 @@
     const m = (state.chat || [])[i]; if (!m || m.undone) return;
     const ids = m.saved || [];
     state.rules = state.rules.filter((r) => !ids.includes(r.id)).concat(m.removed || []);
-    if (m.postId && !state.rules.some((r) => r.post === m.postId)) state.posts = state.posts.filter((p) => p.id !== m.postId);
+    state.recipes = (state.recipes || []).filter((r) => !(m.recipes || []).includes(r.id));
+    if (m.postId && !state.rules.some((r) => r.post === m.postId) && !state.recipes.some((r) => r.post === m.postId)) state.posts = state.posts.filter((p) => p.id !== m.postId);
     m.undone = true; touch(); render(); renderChat();
   }
   function addReview(i, j) {
@@ -264,8 +265,55 @@
     if (g && added.length) { const pid = ensurePost(m); added.forEach((x) => { x.post = pid; }); state.posts[0].rules = added.length; }
     state.rules.push(...added);
     m.saved = added.map((x) => x.id); m.savedText = added.map(describe);
+    const rcs = (Array.isArray(res.recipes) ? res.recipes : []).slice(0, 3).map(cleanRecipe).filter(Boolean);
+    if (rcs.length) {
+      const pid = g && added.length ? m.postId : (g ? ensurePost(m) : null);
+      rcs.forEach((x) => { x.id = uid(); if (pid) x.post = pid; if (m.link && x.source === 'post') x.link = m.link; });
+      state.recipes = (state.recipes || []).concat(rcs);
+      m.recipes = rcs.map((x) => x.id); m.recipeText = rcs.map((x) => x.dish);
+    }
     m.review = (Array.isArray(res.review) ? res.review : []).slice(0, 8).map((s) => ({ rule: cleanRule(s && s.rule), why: clip(s && s.why, 300), caution: clip(s && s.caution, 300) })).filter((s) => s.rule);
     return m;
+  }
+
+  // ---------- recipes ----------
+  function cleanRecipe(r) {
+    if (!r || typeof r !== 'object') return null;
+    const list = (v, n, k) => (Array.isArray(v) ? v : []).slice(0, n).map((x) => clip(x, k)).filter(Boolean);
+    const ing = list(r.ingredients, 30, 140), steps = list(r.steps, 20, 400), dish = clip(r.dish, 80);
+    if (!dish || !ing.length || !steps.length) return null;
+    return { dish, serves: clip(r.serves, 60), mins: Math.max(0, Math.min(600, Number(r.mins) || 0)), ing, steps, source: r.source === 'post' ? 'post' : 'ai', note: clip(r.note, 300), date: new Date().toISOString().slice(0, 10) };
+  }
+  const words = (t) => String(t).toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter((w) => w.length > 2 && !['with', 'and', 'the', 'baby', 'recipe', 'for'].includes(w));
+  // a saved recipe (from a post or the chat) that is about this menu dish
+  function customFor(f) {
+    const hay = ' ' + words(f.n + ' ' + f.ing.join(' ')).join(' ') + ' ';
+    return (state.recipes || []).filter((r) => { const w = words(r.dish); return w.length && w.every((x) => hay.includes(' ' + x) || hay.includes(x)); });
+  }
+  function recipeHtml(r, label) {
+    const src = r.source === 'post' ? `<span class="rc-src post">From the post${r.link ? '' : ''}</span>` : '<span class="rc-src">Written by Little Bites</span>';
+    return `<h2 id="rcTitle">${esc(r.dish)}</h2><div class="rc-meta">${esc(r.serves || '')}${r.mins ? ` · about ${r.mins} min` : ''}</div>${label || src}${r.link ? ` <a class="tip" href="${esc(r.link)}" target="_blank" rel="noopener noreferrer">Open post</a>` : ''}` +
+      `<h3>Ingredients</h3><ul>${r.ing.map((x) => `<li>${esc(x)}</li>`).join('')}</ul><h3>Method</h3><ol>${r.steps.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` +
+      (r.note ? `<div class="rc-note">${esc(r.note)}</div>` : '');
+  }
+  function openRecipe(r, tabs) {
+    const dlg = $('recipeDlg');
+    const show = (i) => {
+      const t = tabs ? `<div class="rc-tabs">${tabs.map((x, k) => `<button type="button" data-rctab="${k}" class="${k === i ? 'on' : ''}">${esc(x.label)}</button>`).join('')}</div>` : '';
+      $('rcBody').innerHTML = recipeHtml(tabs ? tabs[i].r : r) + t;
+      $('rcBody').querySelectorAll('[data-rctab]').forEach((b) => b.addEventListener('click', () => show(+b.dataset.rctab)));
+    };
+    show(0); if (!dlg.open) dlg.showModal();
+  }
+  function showFoodRecipe(id) {
+    const f = FOODS.find((x) => x.id === id); if (!f) return;
+    const base = Recipes.get(f), mine = customFor(f);
+    const own = mine.map((r, k) => ({ label: r.source === 'post' ? 'From the post' + (mine.length > 1 ? ' ' + (k + 1) : '') : 'Chat recipe', r }));
+    const tabs = (base ? [{ label: 'Little Bites recipe', r: { dish: f.n, serves: base.makes, mins: base.mins, ing: base.ing, steps: base.steps, note: base.note, source: 'ai' } }] : []).concat(own);
+    if (!tabs.length) return;
+    // a recipe taken from a post wins: show it first
+    tabs.sort((a, b) => (a.r.source === 'post' ? 0 : 1) - (b.r.source === 'post' ? 0 : 1));
+    if (tabs.length === 1) openRecipe(tabs[0].r); else openRecipe(null, tabs);
   }
 
   // ---------- rendering ----------
@@ -320,6 +368,9 @@
     $('rules').innerHTML = state.rules.length
       ? state.rules.map((r) => `<li><span>${esc(describe(r))}${r.post ? `<small>from ${esc(postName(r.post))}</small>` : ''}</span><button data-del="${r.id}" aria-label="Remove rule">×</button></li>`).join('')
       : '<li class="empty">No custom rules yet. Showing the default menu.</li>';
+    $('recipes').innerHTML = (state.recipes || []).length
+      ? state.recipes.map((r) => `<li><span><button class="rcv" data-myrecipe="${r.id}">${esc(r.dish)}</button><small>${r.source === 'post' ? 'from a post' : 'chat recipe'}</small></span><button data-delrecipe="${r.id}" aria-label="Remove recipe">×</button></li>`).join('')
+      : '<li class="empty">Ask the chat for a recipe, or share a post that has one.</li>';
     $('posts').innerHTML = state.posts.map((x) => `<li><span><b>${esc(x.source)}</b> <small>${esc(x.language)} · ${esc(x.date)} · ${x.rules} rule(s)</small>${esc(x.summary)}</span><button data-delpost="${x.id}" aria-label="Remove post and its rules">×</button></li>`).join('');
   }
   // ---------- grocery list ----------
@@ -374,7 +425,7 @@
         (lock === 'rule' ? '<span class="chip lock">from your rules</span>' : '') + (lock === 'manual' ? '<span class="chip man">your pick</span>' : '') +
         (f.tags.includes('finger') ? '<span class="chip">finger food</span>' : '');
       return `<div class="card meal m-${m}"><div class="time"><b>${m}</b>${TIMES[m]}</div><div class="body"><h3>${esc(f.n)}</h3>${state.prefs.bn && f.bn ? `<div class="bn" lang="bn">${esc(f.bn)}</div>` : ''}<div class="chips">${chips}</div><div class="tip">${esc(f.tip)}</div>
-        ${lock === 'rule' ? '' : `<div class="acts"><button class="link" data-swap="${w.cycle}|${ui.day}|${m}">Swap this dish</button></div>`}</div></div>`;
+        <div class="acts"><button class="link" data-recipe="${f.id}">Recipe</button>${lock === 'rule' ? '' : `<button class="link" data-swap="${w.cycle}|${ui.day}|${m}">Swap this dish</button>`}</div></div></div>`;
     }).join('');
     return `<div>${rows}</div><div class="milk">Breast/formula milk continues on demand between meals.</div>`;
   }
@@ -436,6 +487,9 @@
     else if (b.dataset.delpost) { state.rules = state.rules.filter((r) => r.post !== b.dataset.delpost); state.posts = state.posts.filter((p) => p.id !== b.dataset.delpost); touch(); render(); renderChat(); }
     else if (b.dataset.tab) setTab(b.dataset.tab);
     else if (b.dataset.ex) { $('chatIn').value = b.dataset.ex; $('chatIn').focus(); }
+    else if (b.dataset.recipe) showFoodRecipe(b.dataset.recipe);
+    else if (b.dataset.myrecipe) { const r = (state.recipes || []).find((x) => x.id === b.dataset.myrecipe); if (r) openRecipe(r); }
+    else if (b.dataset.delrecipe) { state.recipes = state.recipes.filter((x) => x.id !== b.dataset.delrecipe); touch(); renderSaved(); renderChat(); }
     else if (b.dataset.undo) undoMsg(+b.dataset.undo);
     else if (b.dataset.addrev) { const [i, j] = b.dataset.addrev.split(':').map(Number); addReview(i, j); }
     else if (b.dataset.acct) { showAcct(b.dataset.acct); }
@@ -445,6 +499,7 @@
     document.body.dataset.app = b.dataset.app; document.querySelectorAll('.appsw button').forEach((x) => x.classList.toggle('on', x === b)); scrollTo(0, 0); Play.render();
   }));
   Play.init({ $, esc, uid, api, touch, state: () => state, age: () => Engine.profileAge(state.profile), shrink: shrinkImage, errText });
+  $('rcClose').addEventListener('click', () => $('recipeDlg').close());
   $('chatForm').addEventListener('submit', (e) => { e.preventDefault(); sendChat(); });
   $('chatIn').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendChat(); } });
   $('chatIn').addEventListener('input', (e) => { const t = e.target; t.style.height = 'auto'; t.style.height = Math.min(140, t.scrollHeight) + 'px'; });

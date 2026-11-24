@@ -179,6 +179,20 @@ body[data-app=play]{--b1:#f6b3c6;--b2:#d9e1fb;--b3:#f9c6d3;--b4:#bfe9dc;--b5:#fb
 @keyframes crown{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
 .hero h1{animation:bob 4s ease-in-out infinite alternate}
 @keyframes bob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+.meal .acts{display:flex;gap:14px;flex-wrap:wrap}
+#rcBody h2{margin:0 0 2px;font-size:1.15rem}
+#rcBody h3{margin:14px 0 4px;font-size:.95rem;color:var(--brand-d)}
+#rcBody ul,#rcBody ol{margin:0;padding-left:20px;font-size:.92rem;line-height:1.5}
+#rcBody li{margin:2px 0}
+.rc-meta{font-size:.82rem;color:var(--mute)}
+.rc-src{display:inline-block;margin:6px 0 2px;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:700;background:var(--soft);color:var(--berry)}
+.rc-src.post{background:#dff5ec;color:var(--teal)}
+.rc-note{margin-top:12px;padding:8px 10px;border-radius:12px;background:#fff3d9;font-size:.85rem}
+.rc-tabs{display:flex;gap:6px;margin:8px 0}
+.rc-tabs button{border:2px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px;font-size:.82rem;font-weight:700;color:var(--mute)}
+.rc-tabs button.on{border-color:var(--brand);color:var(--brand-d);background:var(--soft)}
+.subh{margin:14px 0 4px;font-size:.9rem}
+.rules li button.rcv{border:0;background:none;color:var(--teal2);font-weight:700;font-size:.82rem;margin-right:4px}
 @media(prefers-reduced-motion:reduce){.bg i,.cloud,.crown,.hero h1{animation:none!important}}
 /* ---- pink first: teal and mint are the supporting colours ---- */
 header.top{background:linear-gradient(135deg,#ee6a92,#c23c68);box-shadow:0 2px 14px rgba(150,30,70,.3)}
@@ -284,6 +298,8 @@ details.saved summary{cursor:pointer;font-weight:700;color:var(--berry)}
         <summary id="savedSum">Saved rules</summary>
         <ul class="rules" id="rules"></ul>
         <ul class="rules" id="posts"></ul>
+      <h3 class="subh">Saved recipes</h3>
+      <ul class="rules" id="recipes"></ul>
         <button class="link" id="resetAll">Reset to default menu</button>
       </details>
     </div>
@@ -328,6 +344,10 @@ details.saved summary{cursor:pointer;font-weight:700;color:var(--berry)}
   <button data-tab="custom">Chat</button>
 </nav>
 
+<dialog id="recipeDlg" aria-labelledby="rcTitle">
+  <div id="rcBody"></div>
+  <div class="acts" style="margin-top:12px"><button class="primary" id="rcClose" type="button">Close</button></div>
+</dialog>
 <dialog id="setup">
   <form method="dialog" id="setupForm">
     <h2>About your baby</h2>
@@ -396,6 +416,7 @@ details.saved summary{cursor:pointer;font-weight:700;color:var(--berry)}
 
 <script src="store.js"></script>
 <script src="foods.js"></script>
+<script src="recipes.js"></script>
 <script src="engine.js"></script>
 <script src="grocery.js"></script>
 <script src="milestones.js"></script>
